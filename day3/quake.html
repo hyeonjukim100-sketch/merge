@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 지진 지도</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #0b0f1a; color: #e6e9f2; }
+        #bar { padding: 10px 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        #bar h1 { font-size: 18px; margin: 0 8px 0 0; }
+        select, button { background: #1a2238; color: #e6e9f2; border: 1px solid #34406a; border-radius: 6px; padding: 6px 10px; }
+        #stats { padding: 0 12px 10px; font-size: 14px; color: #9aa6c8; }
+        #stats b { color: #fff; }
+        #map { height: calc(100vh - 100px); background: #0b0f1a; }
+
+        /* 일반 OSM 타일을 색 반전해서 다크 지도처럼 보이게 한다 */
+        .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
+
+        /* 지진 표시: 규모만큼 커지고 퍼져 나가는 원 */
+        .quake { position: relative; }
+        .quake i { position: absolute; inset: 0; border-radius: 50%; background: var(--c); opacity: .55; border: 1px solid var(--c); }
+        .quake i.ring { background: none; animation: pulse 2s ease-out infinite; }
+        @keyframes pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(2.8); opacity: 0; } }
+
+        .leaflet-popup-content-wrapper { background: #1a2238; color: #e6e9f2; }
+        .leaflet-popup-tip { background: #1a2238; }
+        .leaflet-popup-content a { color: #7fb4ff; }
+        #legend { position: absolute; right: 12px; bottom: 28px; z-index: 1000; background: #1a2238cc; padding: 8px 10px; border-radius: 8px; font-size: 12px; line-height: 1.7; }
+        #legend span { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    </style>
+</head>
+<body>
+    <div id="bar">
+        <h1>🌍 실시간 지진 지도</h1>
+        <select id="period">
+            <option value="all_hour">최근 1시간</option>
+            <option value="all_day" selected>최근 24시간</option>
+            <option value="all_week">최근 7일</option>
+        </select>
+        <select id="minMag">
+            <option value="0">모든 규모</option>
+            <option value="2.5">규모 2.5 이상</option>
+            <option value="4.5">규모 4.5 이상</option>
+            <option value="6">규모 6 이상</option>
+        </select>
+        <button id="reload">새로고침</button>
+    </div>
+    <div id="stats">불러오는 중...</div>
+    <div id="map"></div>
+    <div id="legend">
+        <div><span style="background:#4ade80"></span>규모 3 미만</div>
+        <div><span style="background:#facc15"></span>3 ~ 4.9</div>
+        <div><span style="background:#fb923c"></span>5 ~ 5.9</div>
+        <div><span style="background:#ef4444"></span>6 이상</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 데이터: USGS 지진 피드 (인증키 불필요)
+        const FEED = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/"
+
+        const map = L.map("map", { worldCopyJump: true }).setView([25, 130], 3)
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors | 데이터: USGS", maxZoom: 12,
+        }).addTo(map)
+        const layer = L.layerGroup().addTo(map)
+
+        const colorOf = m => m >= 6 ? "#ef4444" : m >= 5 ? "#fb923c" : m >= 3 ? "#facc15" : "#4ade80"
+        const sizeOf = m => Math.max(8, 6 + m * 5)
+        const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]))
+
+        let data = []
+
+        const draw = () => {
+            const min = Number(minMag.value)
+            const shown = data.filter(f => (f.properties.mag ?? 0) >= min)
+            layer.clearLayers()
+            const now = Date.now()
+
+            for (const f of shown) {
+                const { mag, place, time, url } = f.properties
+                const [lng, lat, depth] = f.geometry.coordinates
+                const m = mag ?? 0
+                const size = sizeOf(m)
+                const recent = now - time < 60 * 60 * 1000 // 1시간 이내면 파동 효과
+                const icon = L.divIcon({
+                    className: "",
+                    iconSize: [size, size],
+                    html: `<div class="quake" style="--c:${colorOf(m)};width:${size}px;height:${size}px"><i></i>${recent ? '<i class="ring"></i>' : ""}</div>`,
+                })
+                L.marker([lat, lng], { icon, zIndexOffset: Math.round(m * 100) }).addTo(layer).bindPopup(
+                    `<b>규모 ${m.toFixed(1)}</b><br>${esc(place)}<br>` +
+                    `깊이 ${depth.toFixed(0)}km<br>${new Date(time).toLocaleString("ko-KR")}<br>` +
+                    `<a href="${esc(url)}" target="_blank" rel="noopener">상세 보기</a>`
+                )
+            }
+
+            if (!shown.length) { stats.textContent = "조건에 맞는 지진이 없습니다."; return }
+            const top = shown.reduce((a, b) => (b.properties.mag ?? 0) > (a.properties.mag ?? 0) ? b : a)
+            const last = shown.reduce((a, b) => b.properties.time > a.properties.time ? b : a)
+            const ago = Math.max(0, Math.round((now - last.properties.time) / 60000))
+            stats.innerHTML = `<b>${shown.length}</b>건 · 최대 <b>규모 ${(top.properties.mag ?? 0).toFixed(1)}</b> (${esc(top.properties.place)}) · 가장 최근 <b>${ago}분 전</b>`
+        }
+
+        const load = () => {
+            stats.textContent = "불러오는 중..."
+            fetch(`${FEED}${period.value}.geojson`)
+                .then(r => r.json())
+                .then(d => { data = d.features; draw() })
+                .catch(() => { stats.textContent = "지진 데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요." })
+        }
+
+        period.onchange = load
+        minMag.onchange = draw
+        reload.onclick = load
+        load()
+        setInterval(load, 60000) // 1분마다 자동 갱신
+    </script>
+</body>
+</html>

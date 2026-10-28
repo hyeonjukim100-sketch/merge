@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제주 특산물 장바구니</title>
+    <style>
+        body { font-family: sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { margin-bottom: .2rem; }
+        .hint { color: #777; font-size: .9rem; margin-top: 0; }
+        #search { width: 100%; padding: .6rem; font-size: 1rem; margin: 1rem 0; box-sizing: border-box; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { display: flex; align-items: center; gap: .6rem; padding: .6rem 0; border-bottom: 1px solid #eee; }
+        li .name { flex: 1; }
+        button { padding: .4rem .8rem; cursor: pointer; }
+        .qty { min-width: 1.5rem; text-align: center; }
+        #total { font-size: 1.3rem; font-weight: bold; margin: 1rem 0; }
+        .empty { color: #999; padding: .6rem 0; }
+    </style>
+</head>
+<body>
+    <h1>🍊 제주 특산물 장바구니</h1>
+    <p class="hint">객체(상품·장바구니) + 함수(계산·화면 그리기) + 이벤트(클릭·입력)가 함께 일하는 예제</p>
+
+    <h2>상품</h2>
+    <input id="search" type="text" placeholder="상품 검색 (예: 귤)" autocomplete="off">
+    <ul id="products"></ul>
+
+    <h2>장바구니</h2>
+    <ul id="cart"></ul>
+    <div id="total"></div>
+    <button id="clear">장바구니 비우기</button>
+
+    <script>
+        // 1) 객체: 상품 하나하나를 데이터로 표현한다. 상품이 늘어도 코드는 그대로다.
+        const products = [
+            { id: 'gam',  name: '🍊 감귤',   price: 5000 },
+            { id: 'han',  name: '🍋 한라봉', price: 8000 },
+            { id: 'chun', name: '🍑 천혜향', price: 9000 },
+            { id: 'pork', name: '🐖 흑돼지', price: 25000 },
+            { id: 'fish', name: '🐟 갈치',   price: 18000 },
+        ];
+
+        // 2) 객체: 장바구니는 { 상품id: 수량 } 형태로 상태를 한 곳에 보관한다.
+        const cart = {};
+
+        // 3) 함수: 한 가지 일만 하는 작은 함수들 (재사용·테스트가 쉽다)
+        const formatPrice = (n) => n.toLocaleString('ko-KR') + '원';
+        const findProduct = (id) => products.find((p) => p.id === id);
+
+        function addItem(id)    { cart[id] = (cart[id] || 0) + 1; }
+        function removeItem(id) {
+            cart[id] = (cart[id] || 0) - 1;
+            if (cart[id] <= 0) delete cart[id];
+        }
+        function calcTotal() {
+            let sum = 0;
+            for (const id in cart) sum += findProduct(id).price * cart[id];
+            return sum;
+        }
+
+        // 4) 함수: 상태(객체)를 화면으로 그린다. 상태가 바뀔 때마다 이 함수만 부르면 된다.
+        const productsEl = document.getElementById('products');
+        const cartEl = document.getElementById('cart');
+        const totalEl = document.getElementById('total');
+        const searchEl = document.getElementById('search');
+
+        function renderProducts() {
+            const keyword = searchEl.value.trim();
+            const list = products.filter((p) => p.name.includes(keyword));
+            productsEl.innerHTML = list.length
+                ? list.map((p) => `
+                    <li>
+                        <span class="name">${p.name}</span>
+                        <span>${formatPrice(p.price)}</span>
+                        <button data-action="add" data-id="${p.id}">담기</button>
+                    </li>`).join('')
+                : '<li class="empty">검색 결과가 없어요.</li>';
+        }
+
+        function renderCart() {
+            const ids = Object.keys(cart);
+            cartEl.innerHTML = ids.length
+                ? ids.map((id) => {
+                    const p = findProduct(id);
+                    return `
+                    <li>
+                        <span class="name">${p.name}</span>
+                        <button data-action="remove" data-id="${id}">-</button>
+                        <span class="qty">${cart[id]}</span>
+                        <button data-action="add" data-id="${id}">+</button>
+                        <span>${formatPrice(p.price * cart[id])}</span>
+                    </li>`;
+                }).join('')
+                : '<li class="empty">비어 있어요. 상품을 담아 보세요.</li>';
+            totalEl.textContent = '합계: ' + formatPrice(calcTotal());
+        }
+
+        // 5) 이벤트: 버튼이 몇 개든 부모(ul) 하나에만 리스너를 달면 된다 (이벤트 위임).
+        //    data-action 값에 따라 객체/함수를 호출할 뿐, 버튼마다 코드를 쓰지 않는다.
+        function handleClick(e) {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const { action, id } = btn.dataset;
+            if (action === 'add') addItem(id);
+            if (action === 'remove') removeItem(id);
+            renderCart();
+        }
+        productsEl.addEventListener('click', handleClick);
+        cartEl.addEventListener('click', handleClick);
+
+        document.getElementById('clear').addEventListener('click', () => {
+            for (const id in cart) delete cart[id];
+            renderCart();
+        });
+
+        // input 이벤트: 글자를 칠 때마다 상품 목록을 다시 그린다.
+        searchEl.addEventListener('input', renderProducts);
+
+        renderProducts();
+        renderCart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제주 관광지 지도</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        #bar { padding: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        #map { height: calc(100vh - 90px); }
+        #msg { padding: 0 8px 8px; color: #555; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div id="bar">
+        <select id="area">
+            <option>동쪽</option><option>서쪽</option><option>서귀포</option><option>제주시</option>
+        </select>
+        <select id="indoor">
+            <option value="">실내/야외 전체</option>
+            <option value="true">실내</option>
+            <option value="false">야외</option>
+        </select>
+        <button id="go">찾기</button>
+    </div>
+    <div id="msg"></div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 지역 중심점(대략적인 값). jeju_spots.json 의 area 값과 같은 이름
+        const CENTERS = {
+            "동쪽(성산)": [33.458, 126.930],
+            "동쪽(구좌)": [33.520, 126.850],
+            "제주시":     [33.500, 126.530],
+            "서쪽(한림)": [33.410, 126.270],
+            "서쪽(안덕)": [33.250, 126.330],
+            "서귀포":     [33.250, 126.560],
+        }
+        const MAX_RESULTS = 8
+
+        // 같은 지역 장소가 한 점에 겹치지 않도록 중심점 둘레에 나선형으로 흩뿌린다
+        const place = (center, n) => {
+            const r = 0.006 + 0.004 * n
+            const a = n * 2.399963 // 황금각(rad)
+            return [center[0] + r * Math.sin(a), center[1] + r * Math.cos(a) * 1.2]
+        }
+
+        const map = L.map("map").setView([33.38, 126.55], 10)
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors", maxZoom: 18,
+        }).addTo(map)
+        const layer = L.layerGroup().addTo(map)
+
+        let spots = []
+        fetch("jeju_spots.json").then(r => r.json()).then(d => { spots = d.spots })
+            .catch(() => { msg.textContent = "jeju_spots.json 을 불러오지 못했습니다. Live Server 같은 로컬 서버로 열어주세요." })
+
+        // api/tools.js 의 find_spots 와 같은 규칙
+        const findSpots = (area, indoor) =>
+            spots.filter(s => s.area.split("(")[0] === area && (indoor === null || s.indoor === indoor))
+
+        go.onclick = () => {
+            const found = findSpots(area.value, indoor.value === "" ? null : indoor.value === "true")
+            layer.clearLayers()
+            const used = {}
+            const points = found.slice(0, MAX_RESULTS).map(s => {
+                const n = used[s.area] = (used[s.area] ?? -1) + 1
+                const pos = place(CENTERS[s.area], n)
+                L.marker(pos).addTo(layer)
+                    .bindPopup(`<b>${s.name}</b><br>${s.area} · ${s.indoor ? "실내" : "야외"}<br>${s.type}`)
+                return pos
+            })
+            msg.textContent = `${found.length}곳 중 ${points.length}곳 표시 (위치는 지역 중심 기준 대략값)`
+            if (points.length) map.fitBounds(points, { padding: [40, 40], maxZoom: 12 })
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let data ={}
+        let v=[]
+        for (let i = 1; i <= 100; i++) {
+            v.push(i)   // key 번호 1~100
+            // a1은 101개, a2는 102개 ... a100은 200개 (key마다 개수가 다름)
+            data["a"+i] = Array.from({length: 100+i}, (_, j) => i*1000+j)
+        }
+        const show =(id)=> console.log(id+" 를 보여줘")
+        for (const i of v) {
+            for (const element of data["a"+i]) {
+                console.log(element+"\n")
+                show(element)
+            }
+        }
+    </script>
+</body>
+</html>

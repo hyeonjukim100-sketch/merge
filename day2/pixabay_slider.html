@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixabay 이미지 슬라이더</title>
+  <style>
+    :root { --bg:#f4f1ea; --card:#fff; --fg:#22211e; --muted:#6f6d66; --line:#e2ded3; --accent:#e8751a; --accent-fg:#fff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#151613; --card:#212220; --fg:#eeede7; --muted:#a09e96; --line:#383935; --accent:#f08a3c; --accent-fg:#1a1100; }
+    }
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; background: var(--bg); color: var(--fg); margin: 0; padding: 16px; }
+    .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    h1 { font-size: 1.3rem; margin: 0; }
+    .box { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; }
+    form { display: flex; gap: 8px; flex-wrap: wrap; }
+    input { flex: 1; min-width: 140px; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+    button { padding: 10px 18px; font-size: 1rem; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+    button:disabled { opacity: .4; cursor: default; }
+    .muted { color: var(--muted); font-size: .88rem; margin: 6px 0 0; }
+    #status { min-height: 1.4em; }
+    .slider { position: relative; overflow: hidden; border-radius: 12px; background: #000; aspect-ratio: 4 / 3; }
+    .track { display: flex; height: 100%; transition: transform .4s ease; }
+    .slide { min-width: 100%; height: 100%; position: relative; }
+    .slide img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 12px; background: rgba(0,0,0,.55); color: #fff; font-size: .8rem; }
+    .caption a { color: #fff; }
+    .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; padding: 0; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 1.3rem; }
+    .prev { left: 8px; } .next { right: 8px; }
+    .dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+    .dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--line); cursor: pointer; }
+    .dots span.on { background: var(--accent); }
+    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🖼️ Pixabay 이미지 슬라이더</h1>
+
+    <div class="box">
+      <form id="form">
+        <input id="key" type="password" placeholder="Pixabay API 키" autocomplete="off">
+        <input id="q" type="text" placeholder="검색어 (예: 제주 감귤)" required>
+        <button type="submit">검색</button>
+      </form>
+      <p class="muted">API 키는 이 브라우저에만 저장되며 pixabay.com 요청에만 사용됩니다.</p>
+      <p class="muted" id="status"></p>
+    </div>
+
+    <div class="box" id="result" hidden>
+      <div class="slider">
+        <div class="track" id="track"></div>
+        <button class="nav prev" id="prev" type="button" aria-label="이전">‹</button>
+        <button class="nav next" id="next" type="button" aria-label="다음">›</button>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="pager">
+        <button id="pagePrev" type="button">← 이전 10개</button>
+        <span class="muted" id="pageInfo"></span>
+        <button id="pageNext" type="button">다음 10개 →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PER_PAGE = 10;
+    const $ = id => document.getElementById(id);
+    let query = '', page = 1, total = 0, index = 0, count = 0;
+
+    try { $('key').value = localStorage.getItem('pixabayKey') || ''; } catch (e) {}
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    async function load() {
+      const key = $('key').value.trim();
+      if (!key) { $('status').textContent = 'API 키를 입력해 주세요.'; return; }
+      try { localStorage.setItem('pixabayKey', key); } catch (e) {}
+      $('status').textContent = '불러오는 중…';
+      const url = 'https://pixabay.com/api/?' + new URLSearchParams({
+        key, q: query, image_type: 'photo', per_page: PER_PAGE, page, lang: 'ko', safesearch: 'true'
+      });
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(res.status === 429 ? '요청 한도를 넘었습니다. 잠시 후 다시 시도하세요.' : 'API 오류 (' + res.status + '). 키를 확인하세요.');
+        const data = await res.json();
+        total = data.totalHits;
+        render(data.hits);
+      } catch (err) {
+        $('status').textContent = err.message || '불러오지 못했습니다.';
+      }
+    }
+
+    function render(hits) {
+      if (!hits.length) { $('result').hidden = true; $('status').textContent = '검색 결과가 없습니다.'; return; }
+      count = hits.length; index = 0;
+      $('track').innerHTML = hits.map(h =>
+        '<div class="slide"><img src="' + esc(h.webformatURL) + '" alt="' + esc(h.tags) + '">' +
+        '<div class="caption">' + esc(h.tags) + ' · <a href="' + esc(h.pageURL) + '" target="_blank" rel="noopener">' + esc(h.user) + ' / Pixabay</a></div></div>'
+      ).join('');
+      $('dots').innerHTML = hits.map((_, i) => '<span data-i="' + i + '"></span>').join('');
+      $('result').hidden = false;
+      $('status').textContent = '"' + query + '" 검색 결과 ' + total + '장';
+      go(0);
+    }
+
+    function go(i) {
+      index = (i + count) % count;
+      $('track').style.transform = 'translateX(-' + index * 100 + '%)';
+      [...$('dots').children].forEach((d, n) => d.classList.toggle('on', n === index));
+      const last = Math.ceil(total / PER_PAGE);
+      $('pageInfo').textContent = page + ' / ' + last + ' 페이지';
+      $('pagePrev').disabled = page <= 1;
+      $('pageNext').disabled = page >= last;
+    }
+
+    $('form').addEventListener('submit', e => { e.preventDefault(); query = $('q').value.trim(); page = 1; load(); });
+    $('prev').addEventListener('click', () => go(index - 1));
+    $('next').addEventListener('click', () => go(index + 1));
+    $('dots').addEventListener('click', e => { if (e.target.dataset.i) go(+e.target.dataset.i); });
+    $('pagePrev').addEventListener('click', () => { page--; load(); });
+    $('pageNext').addEventListener('click', () => { page++; load(); });
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || $('result').hidden) return;
+      if (e.key === 'ArrowLeft') go(index - 1);
+      if (e.key === 'ArrowRight') go(index + 1);
+    });
+  </script>
+</body>
+</html>

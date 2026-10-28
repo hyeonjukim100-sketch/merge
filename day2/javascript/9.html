@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        const f=(i ) =>i*2
+        let ops =[1,22,3,5,7]
+        let ops2=[
+            {'a':10},
+            {'a':20},
+            {'a':30},
+            {'a':40},
+            {'a':50},
+        ]
+        for(const i of ops){
+            console.log(f(i))//여기는 데이터가 그냥 값이므로 하나의 순수한 숫자를 함수에 전달
+        }
+
+        for(const i of ops2){
+            //console.log(f(i['a']) +f(i))
+            //ops2에서 하나씩 꺼내어 i에 담긴(저장된 ,데이어킄 {}로 감싸진 것이고 key값을 함수 호출시 전달함)
+            console.log('i= '+i['a'] + '함수 호출결과=' + f(i['a']) +"=입니다.")
+        }
+    </script>
+</body>
+</html>

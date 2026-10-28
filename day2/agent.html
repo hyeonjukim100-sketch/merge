@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>제주 특산물 에이전트</title>
+  <style>
+    :root { --bg:#f4f1ea; --card:#ffffff; --fg:#22211e; --muted:#6f6d66; --line:#e2ded3; --accent:#e8751a; --accent-fg:#ffffff; --bot:#f1ece1; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#151613; --card:#212220; --fg:#eeede7; --muted:#a09e96; --line:#383935; --accent:#f08a3c; --accent-fg:#1a1100; --bot:#2e2f2b; }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { font-family: sans-serif; background: var(--bg); color: var(--fg); margin: 0; padding: 16px; line-height: 1.5; }
+    .chat { max-width: 560px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    header { padding: 14px 18px; border-bottom: 1px solid var(--line); }
+    header h1 { margin: 0; font-size: 1.1rem; color: var(--accent); }
+    header p { margin: 0; font-size: .85rem; color: var(--muted); }
+    #log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 78%; padding: 9px 14px; border-radius: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .me { align-self: flex-end; background: var(--accent); color: var(--accent-fg); border-bottom-right-radius: 4px; }
+    .bot { align-self: flex-start; background: var(--bot); color: var(--fg); border-bottom-left-radius: 4px; }
+    form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+    input { flex: 1; min-width: 0; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+    button { padding: 10px 18px; font-size: 1rem; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+    .note { margin: 0; padding: 0 12px 10px; text-align: center; font-size: .72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <header>
+      <h1>🍊 제주 특산물 에이전트</h1>
+      <p>제주도 특산물에 대해 물어보세요</p>
+    </header>
+
+    <div id="log" aria-live="polite"></div>
+
+    <form id="form">
+      <input id="input" type="text" placeholder="메시지를 입력하세요" autocomplete="off">
+      <button type="submit">보내기</button>
+    </form>
+    <p class="note">※ 지금 나오는 답변은 미리 정해 둔 가짜 답변입니다.</p>
+  </div>
+
+  <script>
+    const REPLY_DELAY_MS = 1000;
+    const REPLIES = [
+      '안녕하세요, 현주님! 제주도 특산물을 알려 드리는 에이전트예요 🍊\n감귤, 흑돼지, 갈치 중에 어떤 게 가장 궁금하세요?',
+      '그렇다면 한라봉을 추천해 드려요! 🍋\n향이 진하고 달콤해서 겨울 선물로 인기가 많아요.',
+      '아직 공부 중이에요! 5일차에 진짜로 알아볼게요.'
+    ];
+    let turn = 0;
+    const log = document.getElementById('log');
+    const input = document.getElementById('input');
+
+    function add(text, who) {
+      const el = document.createElement('div');
+      el.className = 'msg ' + who;
+      el.textContent = text;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    document.getElementById('form').addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      add(text, 'me');
+      input.value = '';
+      const reply = REPLIES[turn % REPLIES.length];
+      turn++;
+      setTimeout(() => add(reply, 'bot'), REPLY_DELAY_MS);
+    });
+
+    input.focus();
+  </script>
+</body>
+</html>

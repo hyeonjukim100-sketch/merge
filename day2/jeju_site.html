@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>제주 특산물 이야기</title>
+  <style>
+    :root { --bg:#f4f1ea; --card:#ffffff; --fg:#22211e; --muted:#6f6d66; --line:#e2ded3; --accent:#e8751a; --accent-fg:#ffffff; --soft:#fdf0e3; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#151613; --card:#212220; --fg:#eeede7; --muted:#a09e96; --line:#383935; --accent:#f08a3c; --accent-fg:#1a1100; --soft:#33271a; }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: sans-serif; background: var(--bg); color: var(--fg); margin: 0; padding: 16px; line-height: 1.6; }
+    .page { max-width: 960px; margin: 0 auto; display: grid; gap: 14px;
+      grid-template-columns: 2fr 1fr;
+      grid-template-areas: "header header" "nav nav" "section aside" "article aside" "footer footer"; }
+    .box { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; min-width: 0; }
+    h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    h3 { margin: 0 0 4px; font-size: 1rem; }
+    p { margin: 0 0 8px; }
+    .muted { color: var(--muted); font-size: .9rem; }
+
+    header { grid-area: header; text-align: center; background: linear-gradient(135deg, #e8751a, #f5a742); color: #fff; border: 0; }
+    header h1 { margin: 0 0 4px; font-size: 1.9rem; }
+    header p { margin: 0; }
+
+    nav { grid-area: nav; padding: 10px 12px; }
+    nav ul { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    nav a { display: block; padding: 8px 16px; border-radius: 999px; color: var(--fg); text-decoration: none; font-weight: 600; }
+    nav a:hover { background: var(--accent); color: var(--accent-fg); }
+
+    #products { grid-area: section; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+    .item { background: var(--soft); border-radius: 12px; padding: 12px 14px; }
+    .item .emoji { font-size: 1.8rem; }
+    .item p { margin: 0; }
+
+    #story { grid-area: article; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; }
+
+    aside { grid-area: aside; display: flex; flex-direction: column; gap: 14px; align-self: start; }
+    aside h2 { font-size: 1.05rem; }
+    aside ol, aside ul { margin: 0; padding-left: 20px; }
+    aside li { margin-bottom: 6px; }
+
+    footer { grid-area: footer; text-align: center; color: var(--muted); font-size: .9rem; }
+
+    @media (max-width: 720px) {
+      .page { grid-template-columns: 1fr; grid-template-areas: "header" "nav" "section" "article" "aside" "footer"; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="box">
+      <h1>🍊 제주 특산물 이야기</h1>
+      <p>바람과 바다, 화산토가 키운 제주의 맛을 소개합니다</p>
+    </header>
+
+    <nav class="box">
+      <ul>
+        <li><a href="#products">대표 특산물</a></li>
+        <li><a href="#story">제철 달력</a></li>
+        <li><a href="#faq">자주 묻는 질문</a></li>
+        <li><a href="#experience">체험·날씨</a></li>
+      </ul>
+    </nav>
+
+    <section id="products" class="box">
+      <h2>🌴 제주 대표 특산물</h2>
+      <div class="grid">
+        <div class="item"><div class="emoji">🍊</div><h3>감귤</h3><p class="muted">제주의 상징. 겨울철 비타민 간식으로 인기입니다.</p></div>
+        <div class="item"><div class="emoji">🍋</div><h3>한라봉 · 천혜향 · 레드향</h3><p class="muted">향과 당도가 뛰어난 만감류 감귤입니다.</p></div>
+        <div class="item"><div class="emoji">🐖</div><h3>흑돼지</h3><p class="muted">쫄깃하고 고소한 제주식 고기구이의 주인공입니다.</p></div>
+        <div class="item"><div class="emoji">🐟</div><h3>갈치</h3><p class="muted">은빛 제주 갈치로 구이와 조림을 즐깁니다.</p></div>
+        <div class="item"><div class="emoji">🐚</div><h3>전복 · 성게 · 소라</h3><p class="muted">해녀가 채취하는 신선한 바다의 선물입니다.</p></div>
+        <div class="item"><div class="emoji">🍵</div><h3>제주 녹차</h3><p class="muted">맑은 공기 속에서 자란 향긋한 차입니다.</p></div>
+        <div class="item"><div class="emoji">🍡</div><h3>오메기떡</h3><p class="muted">차조로 만든 쫀득한 제주 전통 떡입니다.</p></div>
+        <div class="item"><div class="emoji">🥜</div><h3>우도 땅콩</h3><p class="muted">고소한 맛으로 간식과 선물로 좋습니다.</p></div>
+      </div>
+    </section>
+
+    <article id="story" class="box">
+      <h2>📅 언제 먹으면 맛있을까? 제철 달력</h2>
+      <p class="muted">대략적인 시기이며 해마다 조금씩 달라질 수 있습니다.</p>
+      <table>
+        <tr><th>특산물</th><th>제철</th></tr>
+        <tr><td>🍊 노지 감귤</td><td>늦가을 ~ 초겨울 (11~1월경)</td></tr>
+        <tr><td>🍋 한라봉 · 천혜향 · 레드향</td><td>겨울 ~ 초봄</td></tr>
+        <tr><td>🍵 녹차</td><td>봄 (첫 수확 시기)</td></tr>
+        <tr><td>🦑 한치</td><td>여름</td></tr>
+        <tr><td>🐟 갈치</td><td>여름 ~ 가을</td></tr>
+        <tr><td>🐖 흑돼지 · 🍡 오메기떡</td><td>사계절 내내</td></tr>
+      </table>
+    </article>
+
+    <aside>
+      <div id="faq" class="box">
+        <h2>❓ 자주 묻는 질문</h2>
+        <ol>
+          <li>귤이 일년에 몇 개 출하 가능한가?</li>
+          <li>제주대학교는 제주시청에서 얼마나 떨어져 있나?</li>
+          <li>다른 특산물이 있는가?</li>
+        </ol>
+        <p class="muted" style="margin:10px 0 0">답변은 준비 중입니다.</p>
+      </div>
+      <div id="experience" class="box">
+        <h2>🎡 체험 · 날씨 안내</h2>
+        <ul>
+          <li>🍊 감귤 따기 체험</li>
+          <li>🐴 승마 체험</li>
+          <li>🤿 스노클링 · 카약</li>
+          <li>🍵 오설록 티 뮤지엄</li>
+        </ul>
+        <p class="muted" style="margin:10px 0 0">🌤️ 바람이 강하고 날씨가 변덕스러우니 방문 전에 꼭 확인하세요.</p>
+      </div>
+    </aside>
+
+    <footer class="box">
+      © 2026 김현주 · 제주 특산물 에이전트
+    </footer>
+  </div>
+</body>
+</html>

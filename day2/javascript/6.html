@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        function plus(a,b){
+            return a+b
+        }
+        function minus(a,b){
+            return a-b
+        }
+        function multiply(a,b){
+            return a*b
+        }
+        function divide(a,b){
+            return a/b
+        }
+        // head 안에서는 body가 아직 없으므로, 문서가 다 읽힌 뒤에 버튼에 이벤트를 연결한다.
+        document.addEventListener('DOMContentLoaded', function () {
+    document.querySelector('button#plus').addEventListener('click', function () {
+        const x = Number(document.querySelector('#x').value);
+        const y = Number(document.querySelector('#y').value);
+        document.querySelector('#result').textContent = x + ' + ' + y + ' = ' + plus(x, y);
+    });
+    document.querySelector('button#minus').addEventListener('click', function () {
+        const x = Number(document.querySelector('#x').value);
+        const y = Number(document.querySelector('#y').value);
+        document.querySelector('#result').textContent = x + ' - ' + y + ' = ' + minus(x, y);
+    });
+    document.querySelector('button#multiply').addEventListener('click', function () {
+        const x = Number(document.querySelector('#x').value);
+        const y = Number(document.querySelector('#y').value);
+        document.querySelector('#result').textContent = x + ' * ' + y + ' = ' + multiply(x, y);
+    });
+    document.querySelector('button#divide').addEventListener('click', function () {
+        const x = Number(document.querySelector('#x').value);
+        const y = Number(document.querySelector('#y').value);
+        document.querySelector('#result').textContent = x + ' / ' + y + ' = ' + divide(x, y);
+    });
+});
+    </script>
+</head>
+<body>
+    안녕하세요
+    <h1>
+        반갑습니다
+    </h1>
+    <h2>
+        반갑습니다
+    </h2>
+    <input id="x" type="number" placeholder="첫 번째 숫자">
+    <input id="y" type="number" placeholder="두 번째 숫자">
+    <button id="plus">덧셈</button>
+    <button id="minus">뺄셈</button>
+    <button id="multiply">곱셈</button>
+    <button id="divide">나눗셈</button>
+    <h2 id="result"></h2>
+</body>
+</html>

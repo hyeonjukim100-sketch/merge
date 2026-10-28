@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let a = {
+            "f1": (a,b) => a+b,
+            "g1": (a,b) => a-b,
+            "k1": (a,b) => a*b,
+            "r1": [(a,b) => a*b, (a,b)=>a/b] // 주석, 코드와 무관, 설명 value가 2개의 함수를 가진 덩어리
+        }
+        console.log(a['k1'](3,7))
+        console.log(a['r1'][1](13,7))
+    </script>
+</body>
+</html>

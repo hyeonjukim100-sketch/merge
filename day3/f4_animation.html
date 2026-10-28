@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>f4.html 애니메이션</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 20px; background: #12151c; color: #e6e9ef; font-family: "Malgun Gothic", system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #8b93a7; font-size: 13px; margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1000px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: #1a1f2b; border: 1px solid #2a3142; border-radius: 12px; padding: 14px; }
+  .panel h2 { font-size: 13px; margin: 0 0 10px; color: #8b93a7; font-weight: 600; }
+
+  /* 코드 */
+  pre { margin: 0; font: 14px/1.9 Consolas, "D2Coding", monospace; }
+  .ln { display: block; padding: 0 10px; border-left: 3px solid transparent; border-radius: 4px; white-space: pre; transition: background .25s; }
+  .ln.on { background: #3b3a1c; border-left-color: #ffd24a; }
+  .k { color: #c586c0; } .n { color: #4fc1ff; } .s { color: #ce9178; } .f { color: #dcdcaa; } .num { color: #b5cea8; }
+
+  /* 배열 */
+  .arr { display: flex; gap: 10px; align-items: flex-end; min-height: 96px; }
+  .cell { width: 70px; text-align: center; transition: transform .3s; }
+  .cell .box { height: 50px; line-height: 50px; border-radius: 8px; background: #263044; font-size: 20px; font-weight: 700; border: 2px solid #34405a; transition: all .3s; }
+  .cell .idx { font-size: 11px; color: #8b93a7; margin-top: 4px; }
+  .cell.cur .box { background: #1f6f4a; border-color: #4ade80; transform: translateY(-8px) scale(1.08); }
+  .cell.done .box { opacity: .45; }
+  .cell .tag { height: 18px; font-size: 12px; color: #4ade80; font-weight: 700; }
+
+  /* 계산 */
+  .calc { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 56px; font-size: 18px; }
+  .chip { padding: 6px 12px; border-radius: 8px; background: #263044; border: 2px solid #34405a; font-weight: 700; min-width: 56px; text-align: center; }
+  .chip.hot { background: #5a3d12; border-color: #ffb020; }
+  .chip.sumc { background: #1d3a5a; border-color: #4aa3ff; }
+  .op { color: #8b93a7; }
+  .pop { animation: pop .45s; }
+  @keyframes pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+  .vars { display: flex; gap: 12px; margin-top: 4px; }
+  .var { flex: 1; background: #0f1218; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #2a3142; }
+  .var b { display: block; font-size: 26px; margin-top: 2px; }
+  .var span { font-size: 12px; color: #8b93a7; font-family: Consolas, monospace; }
+
+  /* 콘솔 */
+  .con { background: #0b0d12; border-radius: 8px; padding: 10px 12px; min-height: 120px; font: 14px/1.7 Consolas, monospace; }
+  .con div { animation: pop .35s; }
+  .con .res { color: #4ade80; font-weight: 700; }
+
+  .note { max-width: 1000px; margin-top: 16px; padding: 12px 14px; background: #1a2a3d; border-left: 4px solid #4aa3ff; border-radius: 8px; font-size: 15px; min-height: 48px; }
+  .ctrl { max-width: 1000px; margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button { background: #2b4a7a; color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  button:hover { background: #3a5f9a; } button.sec { background: #2a3142; } button:disabled { opacity: .4; cursor: default; }
+  .prog { margin-left: auto; color: #8b93a7; font-size: 13px; }
+  label { color: #8b93a7; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>f4.html 코드 움직여 보기</h1>
+  <div class="sub">배열 [10, 20, 30]을 하나씩 꺼내 3배로 만든 뒤 모두 더하는 코드입니다. “다음 단계”를 눌러 한 줄씩 따라가 보세요.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>코드 (노란 줄 = 지금 실행 중)</h2>
+<pre>
+<span class="ln" id="l0"><span class="k">const</span> <span class="f">f</span>=(<span class="n">i</span>) =&gt; <span class="n">i</span>*<span class="num">3</span></span>
+<span class="ln" id="l1"><span class="k">let</span> <span class="n">arr</span> =[<span class="num">10</span>,<span class="num">20</span>,<span class="num">30</span>]</span>
+<span class="ln" id="l2"><span class="k">let</span> <span class="n">sum</span>=<span class="num">0</span></span>
+<span class="ln" id="l3"><span class="k">for</span> (<span class="k">const</span> <span class="n">v</span> <span class="k">of</span> <span class="n">arr</span>) {</span>
+<span class="ln" id="l4">    console.<span class="f">log</span>(<span class="s">'v='</span> + <span class="n">v</span>)</span>
+<span class="ln" id="l5">    <span class="n">sum</span> = <span class="n">sum</span> + <span class="f">f</span>(<span class="n">v</span>)</span>
+<span class="ln" id="l6">}</span>
+<span class="ln" id="l7">console.<span class="f">log</span>(<span class="n">sum</span>)</span>
+</pre>
+    </div>
+
+    <div class="panel">
+      <h2>배열 arr 와 반복문</h2>
+      <div class="arr" id="arr"></div>
+      <h2 style="margin-top:14px">계산 (f 함수 = 받은 값 × 3)</h2>
+      <div class="calc" id="calc"></div>
+      <div class="vars">
+        <div class="var"><span>v (지금 꺼낸 값)</span><b id="vv">-</b></div>
+        <div class="var"><span>sum (합계)</span><b id="vs">-</b></div>
+      </div>
+    </div>
+
+    <div class="panel" style="grid-column: 1 / -1">
+      <h2>콘솔 출력 (브라우저 F12 → Console)</h2>
+      <div class="con" id="con"></div>
+    </div>
+  </div>
+
+  <div class="note" id="note"></div>
+
+  <div class="ctrl">
+    <button id="next">다음 단계 ▶</button>
+    <button id="play" class="sec">자동 재생</button>
+    <button id="reset" class="sec">처음으로</button>
+    <label>속도 <input type="range" id="speed" min="500" max="2500" step="100" value="1500"></label>
+    <span class="prog" id="prog"></span>
+  </div>
+
+<script>
+  // ── 1) 실제 코드와 같은 계산으로 "단계 목록"을 미리 만든다 ──
+  const f = (i) => i * 3;
+  const arr = [10, 20, 30];
+
+  // 한 단계 = 화면에 보여줄 상태 하나
+  const steps = [];
+  let sum = 0;
+  const out = [];
+  const snap = (o) => steps.push({ out: [...out], sum, idx: -1, v: null, fv: null, calc: null, ...o });
+
+  snap({ line: 0, sum: null, note: "f 함수를 만듭니다. 값 i를 받으면 i × 3 을 돌려주는 계산기예요. 아직 실행은 안 해요." });
+  snap({ line: 1, sum: null, note: "배열 arr 를 만듭니다. 안에 10, 20, 30 세 개의 값이 들어 있어요." });
+  sum = 0;
+  snap({ line: 2, note: "합계를 담을 변수 sum 을 0 으로 시작합니다." });
+
+  arr.forEach((v, k) => {
+    snap({ line: 3, idx: k, v, note: `for 반복문: arr 에서 ${k + 1}번째 값을 꺼내 v 에 담아요. 지금 v = ${v}` });
+    out.push("v=" + v);
+    snap({ line: 4, idx: k, v, note: `console.log('v=' + v) → 콘솔에 "v=${v}" 가 찍혀요.` });
+    const fv = f(v), before = sum;
+    sum = sum + fv;
+    snap({ line: 5, idx: k, v, fv, calc: { before, fv, after: sum },
+           note: `f(${v}) = ${v} × 3 = ${fv}. 그래서 sum = ${before} + ${fv} = ${sum}` });
+  });
+
+  snap({ line: 6, idx: arr.length, note: "배열을 다 돌았어요. 반복문이 끝납니다." });
+  out.push("__RES__" + sum);
+  snap({ line: 7, idx: arr.length, note: `console.log(sum) → 최종 합계 ${sum} 이 출력돼요. (30 + 60 + 90)` });
+
+  // ── 2) 화면 그리기 ──
+  const $ = (id) => document.getElementById(id);
+  let cur = -1;     // 현재 단계 번호
+  let timer = null;
+
+  function render() {
+    const s = steps[cur];
+    for (let i = 0; i < 8; i++) $("l" + i).classList.toggle("on", i === s.line);
+
+    // 배열 칸
+    $("arr").innerHTML = arr.map((x, k) => {
+      const cls = k === s.idx ? "cur" : (k < s.idx ? "done" : "");
+      return `<div class="cell ${cls}"><div class="tag">${k === s.idx ? "v ▼" : ""}</div><div class="box">${x}</div><div class="idx">arr[${k}]</div></div>`;
+    }).join("");
+
+    // 계산 영역
+    if (s.calc) {
+      $("calc").innerHTML =
+        `<span class="chip pop">f(${s.v})</span><span class="op">=</span>` +
+        `<span class="chip">${s.v} × 3</span><span class="op">=</span><span class="chip hot pop">${s.fv}</span>` +
+        `<span class="op" style="margin-left:10px">sum:</span>` +
+        `<span class="chip sumc">${s.calc.before}</span><span class="op">+</span><span class="chip hot">${s.calc.fv}</span>` +
+        `<span class="op">=</span><span class="chip sumc pop">${s.calc.after}</span>`;
+    } else {
+      $("calc").innerHTML = `<span class="op">(f(v)를 계산하는 줄에서 여기에 과정이 나와요)</span>`;
+    }
+
+    $("vv").textContent = s.v ?? "-";
+    $("vs").textContent = s.sum ?? "-";
+
+    // 콘솔
+    $("con").innerHTML = s.out.map((t) =>
+      t.startsWith("__RES__") ? `<div class="res">${t.slice(7)}</div>` : `<div>${t}</div>`).join("") ||
+      `<span style="color:#586078">(아직 출력 없음)</span>`;
+
+    $("note").textContent = s.note;
+    $("prog").textContent = `${cur + 1} / ${steps.length} 단계`;
+    $("next").disabled = cur >= steps.length - 1;
+  }
+
+  function next() {
+    if (cur < steps.length - 1) { cur++; render(); }
+    if (cur >= steps.length - 1) stop();
+  }
+  function stop() { clearTimeout(timer); timer = null; $("play").textContent = "자동 재생"; }
+  function tick() { next(); if (timer !== null && cur < steps.length - 1) timer = setTimeout(tick, +$("speed").value); }
+
+  $("next").onclick = () => { stop(); next(); };
+  $("play").onclick = () => {
+    if (timer !== null) return stop();
+    if (cur >= steps.length - 1) cur = -1;
+    $("play").textContent = "일시정지";
+    timer = setTimeout(tick, 0);
+  };
+  $("reset").onclick = () => { stop(); cur = 0; render(); };
+
+  cur = 0; render();
+</script>
+</body>
+</html>

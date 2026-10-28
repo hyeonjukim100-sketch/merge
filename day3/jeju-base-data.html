@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>제주 데이터 주제별 예제 | JSON·Key·Value</title>
+  <style>
+    :root { color-scheme: light; --bg: #f5f7fb; --surface: #fff; --ink: #172840; --muted: #64748b; --navy: #15385e; --blue: #2769a4; --orange: #ed7b29; --line: #dce5ee; --code: #132237; --code-ink: #e5effb; --soft: #ecf2f8; --good: #2f8f4e; --goodBg: #e9f7ee; --warnBg: #fff4e8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; line-height: 1.55; }
+    .hero { background: linear-gradient(118deg, #132e51, #236b9c); color: #fff; padding: 39px 24px 0; }
+    .wrap { max-width: 1070px; margin: auto; }
+    .eyebrow { font-size: 12px; letter-spacing: .08em; color: #ffcb92; font-weight: 800; margin: 0 0 8px; }
+    h1 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.035em; margin: 0; line-height: 1.3; }
+    .hero-sub { color: #e0eaf4; margin: 10px 0 0; font-size: 15px; }
+    .page-tabs { display: flex; gap: 6px; margin-top: 24px; }
+    .page-tab { cursor: pointer; font: inherit; font-size: 15px; font-weight: 800; color: #dbe8f5; background: rgba(255,255,255,.1); border: 0; border-radius: 11px 11px 0 0; padding: 11px 20px; }
+    .page-tab:hover { background: rgba(255,255,255,.18); }
+    .page-tab[aria-selected="true"] { background: var(--bg); color: var(--navy); }
+    .page-tab:focus-visible { outline: 3px solid var(--orange); outline-offset: -3px; }
+    main { padding: 30px 24px 70px; }
+    [hidden] { display: none !important; }
+    .section-heading { margin-bottom: 14px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    h2 { margin: 0; font-size: 19px; letter-spacing: -.03em; }
+    .small { font-size: 13px; color: var(--muted); }
+    .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .choice { text-align: left; cursor: pointer; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; min-height: 91px; padding: 15px 15px 13px; color: var(--ink); transition: border-color .15s, background-color .15s, box-shadow .15s; font: inherit; }
+    .choice:hover { border-color: #a8bfd6; box-shadow: 0 3px 9px rgba(17,42,74,.07); }
+    .choice:focus-visible, .tab:focus-visible, .copy:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+    .choice[aria-pressed="true"] { border-color: var(--orange); background: #fff9f2; box-shadow: 0 0 0 1px rgba(237,123,41,.08); }
+    .choice-name { display: block; font-size: 16px; font-weight: 800; line-height: 1.45; }
+    .choice-name span { padding-right: 5px; }
+    .choice-file { display: block; font-family: Consolas, "D2Coding", monospace; color: var(--muted); margin-top: 5px; font-size: 12px; overflow-wrap: anywhere; }
+    .details { margin-top: 23px; background: var(--surface); border: 1px solid var(--line); border-radius: 17px; overflow: hidden; box-shadow: 0 9px 30px rgba(19,43,72,.045); }
+    .details-top { padding: 22px 23px 15px; }
+    .detail-kicker { color: var(--blue); font-size: 13px; font-weight: 800; margin: 0 0 5px; }
+    .detail-name { font-size: clamp(21px, 3vw, 26px); font-weight: 850; letter-spacing: -.03em; margin: 0 0 5px; }
+    .detail-sub { color: var(--muted); font-size: 14px; margin: 0; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 0 23px 13px; }
+    .tabs { display: flex; gap: 5px; padding: 4px; background: var(--soft); border-radius: 9px; }
+    .tab { cursor: pointer; color: #50647b; background: transparent; border: 0; font: inherit; font-size: 13px; font-weight: 800; padding: 7px 12px; border-radius: 7px; }
+    .tab[aria-selected="true"] { color: var(--navy); background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.09); }
+    .copy { cursor: pointer; border: 1px solid #adc7dd; color: var(--navy); background: #fff; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 750; padding: 9px 15px; }
+    .copy:hover { background: #edf4fb; }
+    .modal { width: min(860px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 0; border-radius: 17px; padding: 0; color: var(--ink); background: var(--surface); box-shadow: 0 20px 60px rgba(10,25,45,.3); }
+    .modal::backdrop { background: rgba(15,30,50,.55); }
+    .modal-hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 20px 4px; }
+    .modal-sub { margin: 0 20px 12px; }
+    .modal-sub code { font-family: "D2Coding", Consolas, monospace; background: var(--soft); border-radius: 5px; padding: 1px 6px; }
+    .modal-code { margin: 0 20px 20px; max-height: calc(100vh - 190px); }
+    .modal-code pre { white-space: pre; }
+    .copy-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .copy-llm { border-color: var(--orange); color: #a4520f; }
+    .copy-llm:hover { background: #fff4e8; }
+    .code-area { background: var(--code); margin: 0 23px 22px; border-radius: 12px; overflow: auto; max-height: 560px; }
+    pre { margin: 0; padding: 22px 21px; color: var(--code-ink); font: 14px/1.85 "D2Coding", Consolas, "SFMono-Regular", monospace; tab-size: 2; white-space: pre-wrap; word-break: break-word; }
+    code { font: inherit; }
+    .keyword { color: #9bceff; font-weight: 700; }
+    .comment { color: #a5b4c8; }
+    .string { color: #aee5b0; }
+    .number { color: #ffc38f; }
+    .boolean { color: #e5b7ff; }
+    .key { color: #b6cfff; }
+    .footer-note { border-top: 1px solid var(--line); padding: 15px 23px 19px; font-size: 13px; color: var(--muted); }
+    .footer-note strong { color: var(--ink); }
+    .screenreader { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    /* ── 과제 설명 ── */
+    .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 26px; }
+    .flow-item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; position: relative; }
+    .flow-item .num { display: inline-block; background: var(--orange); color: #fff; font-weight: 850; font-size: 13px; border-radius: 7px; padding: 1px 9px; margin-bottom: 6px; }
+    .flow-item b { display: block; font-size: 16px; }
+    .flow-item span.d { font-size: 13px; color: var(--muted); }
+    .step { background: var(--surface); border: 1px solid var(--line); border-radius: 17px; margin-top: 18px; box-shadow: 0 9px 30px rgba(19,43,72,.045); overflow: hidden; }
+    .step-hd { display: flex; align-items: center; gap: 12px; padding: 18px 23px 4px; }
+    .step-no { flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--navy); color: #fff; display: grid; place-items: center; font-weight: 850; }
+    .step-hd h2 { font-size: 20px; }
+    .step-hd .time { margin-left: auto; font-size: 13px; color: var(--muted); font-weight: 700; }
+    .step-bd { padding: 8px 23px 22px; font-size: 15px; }
+    .step-bd p { margin: 8px 0; }
+    .step-bd h3 { font-size: 15px; margin: 18px 0 6px; color: var(--navy); }
+    .step-bd ul, .step-bd ol { margin: 6px 0; padding-left: 22px; }
+    .step-bd li { margin: 4px 0; }
+    .step-bd code, .rule-table code { font-family: "D2Coding", Consolas, monospace; background: var(--soft); border-radius: 5px; padding: 1px 6px; font-size: .92em; }
+    .rule-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 6px; }
+    .rule-table th, .rule-table td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    .rule-table th { background: var(--soft); color: var(--navy); font-size: 13px; }
+    .table-scroll { overflow-x: auto; }
+    .callout { background: var(--warnBg); border-left: 4px solid var(--orange); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 12px 0; font-size: 14px; }
+    .callout.good { background: var(--goodBg); border-left-color: var(--good); }
+    .prompt-box { margin-top: 8px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .prompt-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: var(--soft); padding: 8px 12px; font-size: 13px; font-weight: 800; color: var(--navy); }
+    .prompt-box pre { background: var(--code); max-height: 420px; overflow: auto; font-size: 13.5px; line-height: 1.75; }
+    .checklist { list-style: none; padding-left: 0 !important; }
+    .checklist li { padding-left: 28px; position: relative; }
+    .checklist input { position: absolute; left: 0; top: 4px; width: 17px; height: 17px; accent-color: var(--good); }
+    .link-btn { cursor: pointer; border: 0; background: none; color: var(--blue); font: inherit; font-weight: 800; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+    .ex-list { list-style: none; padding-left: 0 !important; }
+    .ex-list li { background: var(--soft); border-left: 3px solid var(--blue); border-radius: 0 9px 9px 0; padding: 9px 13px; margin: 7px 0; font-size: 14px; }
+    .chip { display: inline-block; background: #fff9f2; border: 1px solid #f3c9a3; color: #a4520f; font-weight: 800; font-size: 13px; border-radius: 99px; padding: 2px 10px; }
+
+    @media (max-width: 790px) { .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); } .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 480px) { .flow { grid-template-columns: 1fr; } }
+    @media (max-width: 520px) { main { padding: 22px 14px 45px; } .hero { padding: 29px 16px 0; } .page-tab { padding: 10px 14px; font-size: 14px; } .choices { gap: 8px; } .choice { padding: 12px 10px; min-height: 98px; } .choice-name { font-size: 14px; } .choice-file { font-size: 11px; } .details-top, .toolbar, .step-hd, .step-bd { padding-left: 15px; padding-right: 15px; } .code-area { margin-left: 15px; margin-right: 15px; } .footer-note { padding-left: 15px; padding-right: 15px; } pre { font-size: 12px; padding: 15px 12px; } .step-hd .time { display: none; } }
+    @media (prefers-reduced-motion: reduce) { .choice { transition: none; } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">제주대 바이브코딩 · 3일차 참고 자료</p>
+      <h1>제주 데이터 주제별 예제</h1>
+      <p class="hero-sub" id="heroSub">주제를 누르면 해당 데이터의 구조와 Key · Value 예시를 볼 수 있습니다.</p>
+      <nav class="page-tabs" role="tablist" aria-label="페이지 구분">
+        <button class="page-tab" type="button" role="tab" id="pageGuideTab" aria-selected="false" aria-controls="viewGuide">과제 설명</button>
+        <button class="page-tab" type="button" role="tab" id="pageExampleTab" aria-selected="true" aria-controls="viewExamples">주제별 예제</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ───────── 과제 설명 ───────── -->
+    <div id="viewGuide" role="tabpanel" aria-labelledby="pageGuideTab" hidden>
+      <div class="flow">
+        <div class="flow-item"><span class="num">1단계</span><b>주제 고르기</b><span class="d">6가지 중 하나 · 파일명 확정</span></div>
+        <div class="flow-item"><span class="num">2단계</span><b>LLM과 데이터 늘리기</b><span class="d">직접 수집 · 총 50~100개</span></div>
+        <div class="flow-item"><span class="num">3단계</span><b>데이터로 사이트 만들기</b><span class="d">자유 주제</span></div>
+        <div class="flow-item"><span class="num">4단계</span><b>GitHub에 배포</b><span class="d">저장소 만들기 · 배포</span></div>
+        <div class="flow-item"><span class="num">5단계</span><b>Vercel에서 배포</b><span class="d">GitHub 저장소 Import</span></div>
+        <div class="flow-item"><span class="num">6단계</span><b>링크 공유</b><span class="d">강사님께 제출</span></div>
+      </div>
+
+      <section class="step" aria-labelledby="s1">
+        <div class="step-hd"><span class="step-no">1</span><h2 id="s1">주제 고르기</h2></div>
+        <div class="step-bd">
+          <p><button class="link-btn" type="button" data-go="examples">주제별 예제</button>에서 하나 선택 → <span class="chip" id="guideTopic">-</span> · <code id="guideFile">-</code></p>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s2">
+        <div class="step-hd"><span class="step-no">2</span><h2 id="s2">LLM과 데이터 늘리기</h2></div>
+        <div class="step-bd">
+          <p>기본 예제에는 데이터가 2개만 들어 있습니다. 직접 제주 관련 데이터를 수집하여 <b>총 50~100개</b>로 늘려 보세요.</p>
+          <ul>
+            <li>추가할 데이터의 개수와 항목은 학생이 직접 결정</li>
+            <li>Claude Chat 모드를 활용해 자료 조사 및 JSON 작성 가능</li>
+            <li><code>category</code>는 같은 표현으로 통일 (예: 해변 / 해수욕장 섞지 않기)</li>
+            <li>중복 데이터가 없는지 직접 확인</li>
+            <li>완성한 데이터를 JSON 파일로 저장</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s3">
+        <div class="step-hd"><span class="step-no">3</span><h2 id="s3">데이터로 사이트 만들기</h2></div>
+        <div class="step-bd">
+          <p>2단계에서 만든 데이터를 활용해 <b>자유롭게</b> 사이트를 만들어 보세요.</p>
+          <h3>프롬프트 예시</h3>
+          <ul class="ex-list">
+            <li>첨부한 JSON 데이터로 제주 소개 웹페이지를 만들어 줘. 항목을 카드 형태로 보여 줘.</li>
+            <li>category별로 버튼을 만들고, 누르면 해당 항목만 보이게 해 줘.</li>
+            <li>selected가 true인 항목만 모아서 "가 보고 싶은 곳" 목록을 만들어 줘.</li>
+            <li>score가 높은 순으로 정렬하고, 이름으로 검색할 수 있게 해 줘.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s4">
+        <div class="step-hd"><span class="step-no">4</span><h2 id="s4">GitHub에 배포</h2></div>
+        <div class="step-bd">
+          <p>완성한 사이트를 GitHub에 올려 배포합니다.</p>
+          <p>저장소 이름 예: <code id="repoName">jeju_foods_project</code></p>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s5">
+        <div class="step-hd"><span class="step-no">5</span><h2 id="s5">Vercel에서 배포</h2></div>
+        <div class="step-bd">
+          <p>Vercel에 GitHub 계정으로 로그인한 뒤, 4단계 저장소를 Import하여 배포합니다.</p>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s6">
+        <div class="step-hd"><span class="step-no">6</span><h2 id="s6">강사님께 링크 공유</h2></div>
+        <div class="step-bd">
+          <p>배포된 사이트 주소(<code>https://….vercel.app</code>)를 강사님께 공유합니다.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ───────── 주제별 예제 ───────── -->
+    <div id="viewExamples" role="tabpanel" aria-labelledby="pageExampleTab">
+      <section aria-labelledby="choiceTitle">
+        <div class="section-heading"><h2 id="choiceTitle">주제 선택</h2><span class="small">6가지 중 선택</span></div>
+        <div class="choices" id="choices"></div>
+      </section>
+      <section class="details" aria-labelledby="detailTitle">
+        <div class="details-top">
+          <p class="detail-kicker">선택한 주제의 데이터 구조</p>
+          <h2 class="detail-name" id="detailTitle">제주 먹거리·특산물</h2>
+          <p class="detail-sub" id="detailSub">이름, 분류, 특징 등을 담은 예제입니다.</p>
+        </div>
+        <div class="toolbar">
+          <span class="small">JSON 형태</span>
+          <div class="copy-group"><button type="button" class="copy copy-llm" id="llmCopyButton">예제 설명</button><button type="button" class="copy" id="copyButton">복사</button></div>
+        </div>
+        <div class="code-area" id="codePanel"><pre><code id="exampleCode"></code></pre></div>
+        <p class="footer-note"><strong>참고:</strong> <b>예제 설명</b>을 누르면 줄마다 설명이 붙은 예제가 열립니다. 예시의 점수(<code>score</code>)와 선택 여부(<code>selected</code>)는 개인이 정한 임의 값입니다. 실제 수집 자료의 출처는 <code>source</code>에 기록해야 합니다.</p>
+      </section>
+    </div>
+    <dialog class="modal" id="explainDialog" aria-labelledby="explainTitle">
+      <div class="modal-hd"><h2 id="explainTitle">예제 설명</h2><button type="button" class="copy" id="explainClose">닫기</button></div>
+      <p class="small modal-sub">각 줄의 <code>//</code> 뒤가 그 줄에 대한 설명입니다.</p>
+      <div class="code-area modal-code"><pre><code id="explainCode"></code></pre></div>
+    </dialog>
+    <div class="screenreader" role="status" id="copyStatus" aria-live="polite"></div>
+  </main>
+  <script>
+    'use strict';
+    // 모든 주제는 기존 jeju-base-data.txt와 같은 공통 Key 구조를 사용합니다.
+    // 아래 내용은 데이터 구조 이해를 위한 예시이며, 실시간 수집 자료가 아닙니다.
+    const TOPICS = [
+      {
+        title: '제주 먹거리·특산물', file: 'jeju_foods.json', icon: '🍊', subtitle: '제주 음식, 특산물의 이름과 종류 및 특징',
+        examples: [
+          { name: '고기국수', category: '음식', description: '제주의 국수 요리', score: 50, selected: true, source: '' },
+          { name: '오메기떡', category: '전통 간식', description: '제주에서 즐겨 먹는 떡', score: 80, selected: false, source: '' }
+        ]
+      },
+      {
+        title: '제주 카페·맛집', file: 'jeju_restaurants.json', icon: '☕', subtitle: '제주 카페와 음식점의 이름과 종류 및 특징',
+        examples: [
+          { name: '예시 카페 A', category: '카페', description: '제주시의 카페를 조사할 때 쓰는 예시', score: 60, selected: false, source: '' },
+          { name: '예시 식당 B', category: '음식점', description: '서귀포 음식점을 조사할 때 쓰는 예시', score: 75, selected: true, source: '' }
+        ]
+      },
+      {
+        title: '제주 관광지·명소', file: 'jeju_spots.json', icon: '📍', subtitle: '주요 관광지의 이름과 분류 및 특징',
+        examples: [
+          { name: '성산일출봉', category: '자연 명소', description: '제주 동쪽 성산에 있는 관광 명소', score: 95, selected: true, source: '' },
+          { name: '천지연폭포', category: '폭포', description: '서귀포에 있는 폭포 명소', score: 70, selected: false, source: '' }
+        ]
+      },
+      {
+        title: '제주 오름·해변', file: 'jeju_nature.json', icon: '🌊', subtitle: '제주 오름과 해변의 이름과 자연환경 특징',
+        examples: [
+          { name: '새별오름', category: '오름', description: '제주시 애월 지역의 오름', score: 85, selected: true, source: '' },
+          { name: '협재해수욕장', category: '해변', description: '제주시 한림 지역의 해수욕장', score: 90, selected: false, source: '' }
+        ]
+      },
+      {
+        title: '제주 문화·역사', file: 'jeju_culture.json', icon: '🏺', subtitle: '전통문화와 설화, 문화유산의 이름과 특징',
+        examples: [
+          { name: '제주 해녀 문화', category: '전통문화', description: '제주의 해녀와 관련된 문화', score: 80, selected: true, source: '' },
+          { name: '설문대할망 설화', category: '설화', description: '제주에 전해지는 거인 할망 이야기', score: 70, selected: false, source: '' }
+        ]
+      },
+      {
+        title: '제주 체험·축제', file: 'jeju_activities.json', icon: '🎉', subtitle: '제주 지역 축제와 체험 활동의 이름과 특징',
+        examples: [
+          { name: '감귤 따기 체험', category: '체험', description: '감귤 수확을 경험하는 체험 활동의 예시', score: 75, selected: true, source: '' },
+          { name: '제주들불축제', category: '축제', description: '제주의 지역 축제', score: 60, selected: false, source: '' }
+        ]
+      }
+    ];
+
+    let selected = 0;
+    const choices = document.getElementById('choices');
+    const codeEl = document.getElementById('exampleCode');
+    const copyButton = document.getElementById('copyButton');
+    const llmCopyButton = document.getElementById('llmCopyButton');
+    const status = document.getElementById('copyStatus');
+    let currentCode = '';
+
+    function toAnnotated(topic) {
+      const e = topic.examples;
+      const entry = (x, isLast) => [
+        '    {',
+        '      name: ' + JSON.stringify(x.name) + ',                 // 항목 이름',
+        '      category: ' + JSON.stringify(x.category) + ',       // 종류 또는 분류',
+        '      description: ' + JSON.stringify(x.description) + ', // 간단한 설명',
+        '      score: ' + x.score + ',                         // 개인 관심도 점수 (실제 평점 아님)',
+        '      selected: ' + x.selected + ',                   // 관심 항목 선택 여부 (true/false)',
+        '      source: ' + JSON.stringify(x.source) + '                       // 확인한 정보의 출처 URL',
+        '    }' + (isLast ? '' : ',')
+      ].join('\n');
+      return [
+        'const data = {                                 // 전체 데이터 객체',
+        '  region: "제주특별자치도",                    // 수집 지역',
+        '  topic: ' + JSON.stringify(topic.title) + ',                  // 선택한 주제',
+        '  items: [                                     // 수집 항목을 담는 배열',
+        entry(e[0], false),
+        entry(e[1], true),
+        '  ]',
+        '};'
+      ].join('\n');
+    }
+
+    function toJson(topic) {
+      return JSON.stringify({region: '제주특별자치도', topic: topic.title, items: topic.examples}, null, 2);
+    }
+
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function highlightLine(line) {
+      // Split on strings/comments first, so string content is not treated as keywords.
+      const parts = line.split(/(\/\/.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g);
+      return parts.map(part => {
+        if (part.startsWith('//')) return '<span class="comment">' + escapeHtml(part) + '</span>';
+        if (part.startsWith('"') || part.startsWith("'")) return '<span class="string">' + escapeHtml(part) + '</span>';
+        return escapeHtml(part)
+          .replace(/\b(const)\b/g, '<span class="keyword">$1</span>')
+          .replace(/\b(true|false)\b/g, '<span class="boolean">$1</span>')
+          .replace(/\b(\d+)\b/g, '<span class="number">$1</span>')
+          .replace(/\b(region|topic|items|name|category|description|score|selected|source|rejected|reason)(?=\s*:)/g, '<span class="key">$1</span>');
+      }).join('');
+    }
+    function render() {
+      const t = TOPICS[selected];
+      choices.querySelectorAll('.choice').forEach((b,i) => { b.setAttribute('aria-pressed', String(i===selected)); });
+      document.getElementById('detailTitle').textContent = t.title;
+      document.getElementById('detailSub').textContent = t.subtitle + ' · 파일명: ' + t.file;
+      currentCode = toJson(t);
+      codeEl.innerHTML = currentCode.split('\n').map(highlightLine).join('\n');
+      copyButton.textContent = '복사';
+      // 과제 설명 탭에도 선택한 주제 반영
+      document.getElementById('guideTopic').textContent = t.icon + ' ' + t.title;
+      document.getElementById('guideFile').textContent = t.file;
+      document.getElementById('repoName').textContent = t.file.replace(/\.json$/, '') + '_project';
+    }
+
+    // ── 상단 페이지 탭 ──
+    const pageGuideTab = document.getElementById('pageGuideTab');
+    const pageExampleTab = document.getElementById('pageExampleTab');
+    function showPage(name) {
+      const guide = name === 'guide';
+      document.getElementById('viewGuide').hidden = !guide;
+      document.getElementById('viewExamples').hidden = guide;
+      pageGuideTab.setAttribute('aria-selected', String(guide));
+      pageExampleTab.setAttribute('aria-selected', String(!guide));
+      document.getElementById('heroSub').textContent = guide
+        ? '주제 고르기 → 데이터 늘리기 → 사이트 만들기 → GitHub → Vercel 배포 → 링크 공유'
+        : '주제를 누르면 해당 데이터의 구조와 Key · Value 예시를 볼 수 있습니다.';
+    }
+    pageGuideTab.addEventListener('click', () => showPage('guide'));
+    pageExampleTab.addEventListener('click', () => showPage('examples'));
+    document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { showPage(b.dataset.go); window.scrollTo({ top: 0 }); }));
+
+    TOPICS.forEach((t,i) => {
+      const b = document.createElement('button');
+      b.className='choice'; b.type='button'; b.setAttribute('aria-pressed','false');
+      const name=document.createElement('span'); name.className='choice-name';
+      const icon=document.createElement('span'); icon.textContent=t.icon;
+      name.append(icon,document.createTextNode(t.title));
+      const file=document.createElement('span'); file.className='choice-file'; file.textContent=t.file;
+      b.append(name,file);
+      b.addEventListener('click',() => { selected=i; render(); });
+      choices.appendChild(b);
+    });
+
+    function legacyCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      ta.remove();
+      return ok;
+    }
+    function selectCode() {
+      const range = document.createRange(); range.selectNodeContents(codeEl);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+    async function copyText(text, btn, okMsg) {
+      let ok = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { ok = false; }
+      }
+      if (!ok) ok = legacyCopy(text);          // 클립보드 API가 막힌 환경 대비
+      if (ok) {
+        btn.textContent = '복사 완료 ✓';
+        status.textContent = okMsg;
+      } else {
+        selectCode();                           // 그래도 안 되면 코드를 선택해 둠
+        btn.textContent = 'Ctrl+C 로 복사';
+        status.textContent = '코드를 선택해 두었습니다. Ctrl+C 를 눌러 복사하세요.';
+      }
+      setTimeout(() => { btn.textContent = '복사'; }, 2500);
+    }
+    copyButton.addEventListener('click', () => copyText(currentCode, copyButton, 'JSON을 복사했습니다.'));
+    const explainDialog = document.getElementById('explainDialog');
+    llmCopyButton.addEventListener('click', () => {
+      const t = TOPICS[selected];
+      document.getElementById('explainTitle').textContent = '예제 설명 · ' + t.title;
+      document.getElementById('explainCode').innerHTML = toAnnotated(t).split('\n').map(highlightLine).join('\n');
+      if (explainDialog.showModal) explainDialog.showModal(); else explainDialog.setAttribute('open', '');
+    });
+    document.getElementById('explainClose').addEventListener('click', () => explainDialog.close ? explainDialog.close() : explainDialog.removeAttribute('open'));
+    explainDialog.addEventListener('click', e => { if (e.target === explainDialog) explainDialog.close(); });
+
+    render();
+  </script>
+</body>
+</html>

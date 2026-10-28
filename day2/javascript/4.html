@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        function plus(a,b){
+            return a+b
+        }
+        function minus(a,b){
+            return a-b
+        }
+        function multiply(a,b){
+            return a*b
+        }
+        function divide(a,b){
+            return a/b
+        }
+        function remainder(a,b){
+            return a%b
+        }
+        // head 안에서는 body가 아직 없으므로, 문서가 다 읽힌 뒤에 버튼에 이벤트를 연결한다.
+        // 'click' 대신 'mouseover'를 쓰면 클릭하지 않고 마우스를 올리기만 해도 함수가 호출된다.
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelector('button#a').addEventListener('mouseover', function () {
+                console.log(plus(4, 6));
+            });
+              document.querySelector('button#b').addEventListener('mouseover', function () {
+                console.log(minus(4, 6));
+            });
+              document.querySelector('button#c').addEventListener('mouseover', function () {
+                console.log(multiply(4, 6));
+            });
+              document.querySelector('button#d').addEventListener('mouseover', function () {
+                console.log(divide(4, 6));
+            });
+              document.querySelector('button#e').addEventListener('mouseover', function () {
+                console.log(remainder(4, 6));
+            });
+        });
+    </script>
+</head>
+<body>
+    안녕하세요
+    <h1>
+        반갑습니다
+    </h1>
+    <h2>
+        반갑습니다
+    </h2>
+    <button id="a">덧셈</button>
+    <button id="b">뺄셈</button>
+    <button id="c">곱셈</button>
+    <button id="d">나누기</button>
+    <button id="e">나머지</button>
+</body>
+</html>

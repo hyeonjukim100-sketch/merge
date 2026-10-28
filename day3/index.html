@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제주 여행 추천 에이전트</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f4f7fb; color: #1d2433; }
+        /* 왼쪽: 검색·결과, 오른쪽: 지도 (좁은 화면에서는 지도가 위로) */
+        .layout { display: flex; gap: 16px; max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+        main { flex: 1 1 0; min-width: 0; max-width: 680px; padding: 20px 0 60px; }
+        #map { flex: 1 1 0; min-width: 0; position: sticky; top: 16px; height: calc(100vh - 32px); margin: 16px 0;
+               border: 0; border-radius: 12px; box-shadow: 0 1px 3px #0002; background: #fff; }
+        @media (max-width: 900px) {
+            .layout { flex-direction: column; }
+            #map { order: -1; position: static; height: 340px; flex: none; margin: 16px 0 0; }
+            main { max-width: none; padding-top: 12px; }
+        }
+        /* 지도 번호 마커, 카드 번호, 안내 문구, 전체 보기 버튼 */
+        .pin, .num { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #2563eb;
+                     color: #fff; font-weight: bold; border: 2px solid #fff; box-shadow: 0 1px 4px #0005; }
+        .pin { width: 28px; height: 28px; font-size: 14px; }
+        .num { position: absolute; top: -6px; left: -6px; width: 22px; height: 22px; font-size: 12px; }
+        .spot.onmap { cursor: pointer; }
+        .spot.onmap:hover { box-shadow: 0 2px 8px #2563eb55; }
+        .mapnote { background: #ffffffd9; padding: 3px 8px; border-radius: 6px; font-size: 12px; color: #445; }
+        .mapbtn { background: #fff; color: #234; border: 1px solid #c5cee0; border-radius: 6px; padding: 6px 10px; font-size: 13px;
+                  cursor: pointer; box-shadow: 0 1px 3px #0003; }
+        h1 { font-size: 22px; margin: 0 0 4px; }
+        .sub { color: #667; font-size: 14px; margin: 0 0 16px; }
+        form { display: flex; gap: 8px; }
+        input { flex: 1; padding: 12px; font-size: 16px; border: 1px solid #c5cee0; border-radius: 8px; }
+        button { padding: 0 18px; font-size: 16px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+        button:disabled { background: #9db5ee; cursor: wait; }
+        .chips { margin: 10px 0 18px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .chips span { font-size: 13px; background: #e5ecfb; color: #234; padding: 5px 10px; border-radius: 14px; cursor: pointer; }
+        .card { background: #fff; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px #0001; }
+        .me { background: #2563eb; color: #fff; }
+        .err { background: #fee2e2; color: #991b1b; }
+        .wait { color: #667; }
+        .answer { white-space: pre-wrap; line-height: 1.65; }
+
+        /* 날씨 카드 */
+        .weather { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #e0f0ff, #f3f9ff); }
+        .weather .icon { font-size: 46px; line-height: 1; }
+        .weather .temp { font-size: 18px; font-weight: bold; }
+        .weather .detail { font-size: 13px; color: #556; margin-top: 2px; }
+        .lead { margin: 14px 4px 10px; font-size: 15px; color: #334; }
+
+        /* 장소 카드: 이모지 타일 + 이름 + 설명 */
+        .spot { display: flex; gap: 12px; align-items: center; }
+        .spot .thumb { flex: none; position: relative; width: 72px; height: 72px; border-radius: 10px; background: #e5ecfb;
+                       display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .spot .name { font-weight: bold; margin-bottom: 3px; }
+        .spot .desc { font-size: 14px; color: #445; line-height: 1.5; }
+    </style>
+</head>
+<body>
+<div class="layout">
+<main>
+    <h1>🏝️ 제주 여행 추천 에이전트</h1>
+    <p class="sub">질문하면 에이전트가 날씨와 관광지 도구를 스스로 골라 호출해서 추천해 줍니다.</p>
+
+    <form id="form">
+        <input id="q" placeholder="예) 내일 서귀포에서 갈 만한 곳 추천해줘" maxlength="300" autocomplete="off">
+        <button id="send">추천</button>
+    </form>
+    <div class="chips" id="chips">
+        <span>제주시에서 오늘 가볼 만한 곳은?</span>
+        <span>동쪽에서 실내로 갈 만한 곳 알려줘</span>
+        <span>비 오면 서귀포 어디가 좋아?</span>
+    </div>
+
+    <div id="log"></div>
+</main>
+<div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // get_weather 의 날씨 문구 → 이모지
+    const ICON = { "맑음": "☀️", "구름 조금~흐림": "⛅", "안개": "🌫️", "이슬비": "🌦️", "비": "🌧️", "눈": "❄️", "소나기": "🌦️", "눈 소나기": "🌨️", "뇌우": "⛈️" }
+
+    const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]))
+    const noMd = s => String(s ?? "").replace(/\*+|`+/g, "") // 혹시 남은 마크다운 기호 제거
+
+    const add = (cls, html) => {
+        const d = document.createElement("div")
+        d.className = "card " + cls
+        d.innerHTML = html
+        log.appendChild(d)
+        return d
+    }
+
+    // 사용자가 물은 날(오늘/내일/모레)의 날씨를 보여 준다. 오늘이면 지금 기온도 함께.
+    const weatherCard = w => {
+        const s = w.selected ?? w.forecast[0]
+        const isToday = !w.dayIndex
+        const date = s.date.slice(5).replace("-", "/") // 2026-10-29 → 10/29
+        const title = isToday
+            ? `${w.area} · 오늘(${date}) ${s.weather} · 지금 ${Math.round(w.now.temperature)}°C`
+            : `${w.area} · ${w.day}(${date}) ${s.weather}`
+        add("weather", `
+            <div class="icon">${ICON[s.weather] ?? "🌤️"}</div>
+            <div>
+                <div class="temp">${esc(title)}</div>
+                <div class="detail">기온 ${Math.round(s.min)}° ~ ${Math.round(s.max)}° · 강수확률 ${s.rain_probability}% · 바람 ${Math.round(isToday ? w.now.wind_kmh : s.wind_kmh)}km/h</div>
+            </div>`)
+    }
+
+    // 장소 종류별 이모지 타일 (이름 + 설명에 들어 있는 단어로 고른다. 위에서부터 먼저 맞는 것 적용)
+    const TILES = [
+        [/해변|해수욕장|바다|포구|해안|항/, "🌊", "#dbeafe"],
+        [/폭포/,                          "💦", "#cffafe"],
+        [/굴/,                            "🕳️", "#e7e5e4"],
+        [/오름|봉|산/,                    "⛰️", "#dcfce7"],
+        [/숲|수목원|공원|정원/,           "🌳", "#d1fae5"],
+        [/미술|갤러리|박물관|전시/,       "🖼️", "#ede9fe"],
+        [/목장/,                          "🐴", "#fef3c7"],
+        [/올레|길|도로/,                  "🚶", "#ffedd5"],
+        [/마을/,                          "🏡", "#fce7f3"],
+        [/시장/,                          "🛍️", "#fee2e2"],
+    ]
+    const tileOf = p => {
+        const t = p.name + " " + (p.type ?? "")
+        const [, icon, bg] = TILES.find(([re]) => re.test(t)) ?? [0, "🏝️", "#e0f2fe"]
+        return { icon, bg }
+    }
+
+    // ---- 지도 (키가 필요 없는 Leaflet + OpenStreetMap) ----
+    const JEJU_VIEW = [[33.20, 126.15], [33.56, 126.98]]
+    const map = L.map("map").fitBounds(JEJU_VIEW)
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors", maxZoom: 18,
+    }).addTo(map)
+    const allLayer = L.layerGroup().addTo(map)  // 검색 전: 목록의 모든 장소
+    const pickLayer = L.featureGroup()          // 검색 후: 추천된 장소만
+
+    // 정확한 좌표가 없어서, 지역의 대략적인 중간 지점 둘레에 장소를 고르게 흩뿌려 표시한다
+    const CENTERS = {
+        "동쪽(성산)": [33.458, 126.930], "동쪽(구좌)": [33.520, 126.850], "제주시": [33.500, 126.530],
+        "서쪽(한림)": [33.410, 126.270], "서쪽(안덕)": [33.250, 126.330], "서귀포": [33.250, 126.560],
+    }
+    const posOf = {}  // 장소 이름 → [위도, 경도] (대략값)
+    const infoOf = {} // 장소 이름 → {area, type}
+
+    const note = L.control({ position: "bottomleft" })
+    note.onAdd = () => {
+        const d = L.DomUtil.create("div", "mapnote")
+        d.textContent = "※ 정확한 위치가 아니라 지역 주변의 대략적인 위치입니다"
+        return d
+    }
+    note.addTo(map)
+
+    const showAll = () => { // 처음 상태로: 모든 장소 보기
+        map.removeLayer(pickLayer)
+        map.addLayer(allLayer)
+        map.fitBounds(JEJU_VIEW)
+    }
+    const resetBtn = L.control({ position: "topright" })
+    resetBtn.onAdd = () => {
+        const b = L.DomUtil.create("button", "mapbtn")
+        b.textContent = "전체 장소 보기"
+        L.DomEvent.disableClickPropagation(b)
+        b.onclick = showAll
+        return b
+    }
+    resetBtn.addTo(map)
+
+    fetch("jeju_spots.json").then(r => r.json()).then(d => {
+        const count = {}
+        for (const s of d.spots) {
+            const c = CENTERS[s.area]
+            if (!c) continue
+            const k = count[s.area] = (count[s.area] ?? -1) + 1
+            const r = 0.011 * Math.sqrt(k + 1), a = k * 2.399963 // 황금각 배치
+            const pos = posOf[s.name] = [c[0] + r * Math.sin(a), c[1] + r * Math.cos(a) * 1.2]
+            infoOf[s.name] = { area: s.area, type: s.type }
+            L.circleMarker(pos, { radius: 5, color: "#fff", weight: 1, fillColor: "#2563eb", fillOpacity: 0.75 })
+                .bindTooltip(esc(s.name))
+                .bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.area)} · ${esc(s.type)}`)
+                .addTo(allLayer)
+        }
+    }).catch(() => {})
+
+    // 추천 결과가 오면 모든 장소 대신 추천된 장소만 번호 마커로 보여 준다
+    const showPicks = (picks, cards) => {
+        pickLayer.clearLayers()
+        picks.forEach((p, i) => {
+            const pos = posOf[p.name]
+            if (!pos) return
+            const marker = L.marker(pos, { icon: L.divIcon({ className: "", html: `<div class="pin">${i + 1}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] }) })
+                .bindPopup(`<b>${esc(p.name)}</b><br>${esc(infoOf[p.name].area)}`)
+                .addTo(pickLayer)
+            cards[i].classList.add("onmap")
+            cards[i].querySelector(".thumb").insertAdjacentHTML("beforeend", `<span class="num">${i + 1}</span>`)
+            // 카드를 누르면 지도에서 그 장소로 이동
+            cards[i].onclick = () => {
+                if (!pickLayer.hasLayer(marker)) return // 이전 검색의 카드
+                if (!map.hasLayer(pickLayer)) { map.removeLayer(allLayer); map.addLayer(pickLayer) }
+                map.flyTo(pos, 12)
+                marker.openPopup()
+                if (matchMedia("(max-width: 900px)").matches) window.scrollTo({ top: 0, behavior: "smooth" })
+            }
+        })
+        if (!pickLayer.getLayers().length) return
+        map.removeLayer(allLayer)
+        map.addLayer(pickLayer)
+        map.fitBounds(pickLayer.getBounds(), { padding: [50, 50], maxZoom: 11 })
+    }
+
+    const spotCard = p => {
+        const { icon, bg } = tileOf(p)
+        return add("spot", `
+            <div class="thumb" style="background:${bg}">${icon}</div>
+            <div><div class="name">${esc(noMd(p.name))}</div><div class="desc">${esc(noMd(p.desc))}</div></div>`)
+    }
+
+    form.onsubmit = async e => {
+        e.preventDefault()
+        const message = q.value.trim()
+        if (!message) return
+        add("me", esc(message))
+        const wait = add("wait", "오늘 날씨에 어울리는 명소를 찾는 중이에요 😊")
+        send.disabled = true
+        try {
+            const r = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ message }),
+            })
+            const d = await r.json()
+            wait.remove()
+            if (d.error) add("err", esc(d.error))
+            else {
+                if (d.weather) weatherCard(d.weather)
+                if (d.lead) log.insertAdjacentHTML("beforeend", `<div class="lead">${esc(noMd(d.lead))}</div>`)
+                const picks = d.picks ?? []
+                showPicks(picks, picks.map(spotCard))
+                if (d.answer) add("answer", esc(noMd(d.answer)))
+            }
+        } catch (err) {
+            wait.remove()
+            add("err", "요청 실패: " + esc(err.message))
+        }
+        send.disabled = false
+        q.value = ""
+        window.scrollTo(0, document.body.scrollHeight)
+    }
+
+    chips.onclick = e => { if (e.target.tagName === "SPAN") { q.value = e.target.textContent; q.focus() } }
+</script>
+</body>
+</html>

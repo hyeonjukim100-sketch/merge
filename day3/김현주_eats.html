@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주 맛집·카페</title>
+<style>
+  :root { --bg: #fffaf3; --card: #fff; --ink: #3b2a20; --muted: #8a7566; --line: #f0e2d2; --accent: #e8623a; --accent-soft: #fff0e8; --gold: #f2b134; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; line-height: 1.5; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 18px 60px; }
+
+  header { text-align: center; padding: 44px 0 22px; }
+  header .big { font-size: 40px; letter-spacing: 6px; }
+  h1 { margin: 6px 0 4px; font-size: 30px; letter-spacing: -.03em; }
+  header p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  /* 가보고 싶은 곳 */
+  .wish { background: var(--accent-soft); border: 1px solid #f7d6c4; border-radius: 16px; padding: 16px 18px; margin: 10px 0 24px; }
+  .wish h2 { margin: 0 0 10px; font-size: 17px; }
+  .wish ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .wish li { background: #fff; border: 1px solid #f7d6c4; border-radius: 99px; padding: 5px 13px; font-size: 14px; }
+  .wish li small { color: var(--muted); margin-left: 4px; }
+  .wish .none { color: var(--muted); font-size: 14px; }
+  .wish .more { margin-top: 10px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; color: var(--accent); background: none; border: 0; padding: 0; }
+
+  /* 검색·필터 */
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab { cursor: pointer; font: inherit; font-size: 15px; font-weight: 700; color: var(--ink); background: #fff; border: 1.5px solid var(--line); border-radius: 99px; padding: 8px 16px; }
+  .tab:hover { border-color: var(--accent); }
+  .tab[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs.sub { margin-top: 10px; }
+  .tabs.sub .tab { font-size: 13px; padding: 5px 13px; }
+  .search { margin-left: auto; position: relative; flex: 0 1 260px; }
+  .search input { width: 100%; font: inherit; font-size: 15px; padding: 9px 14px 9px 36px; border: 1.5px solid var(--line); border-radius: 99px; background: #fff; color: var(--ink); }
+  .search input:focus { outline: none; border-color: var(--accent); }
+  .search span { position: absolute; left: 13px; top: 8px; }
+  .count { color: var(--muted); font-size: 13px; margin: 6px 2px 14px; }
+
+  /* 카드 */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px; position: relative; transition: transform .15s, box-shadow .15s; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(120, 70, 30, .1); }
+  .card.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .card .star { position: absolute; top: 12px; right: 14px; font-size: 18px; }
+  .card .emo { font-size: 34px; line-height: 1.1; }
+  .card h3 { margin: 4px 0 0; font-size: 17px; letter-spacing: -.02em; }
+  .badge { align-self: flex-start; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 2px 10px; }
+  .desc { color: var(--muted); font-size: 13.5px; }
+  .score { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; font-size: 13px; font-weight: 700; }
+  .meter { flex: 1; height: 7px; background: #f3e9dd; border-radius: 99px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: linear-gradient(90deg, #f6a04d, var(--accent)); border-radius: 99px; }
+  .card a { font-size: 12px; color: var(--muted); }
+  .empty { grid-column: 1 / -1; text-align: center; padding: 40px 0; color: var(--muted); }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 36px; }
+
+  @media (max-width: 560px) { .search { flex-basis: 100%; margin-left: 0; } h1 { font-size: 26px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="big">🍽️☕🍜</div>
+    <h1>제주 맛집·카페</h1>
+    <p>제주시와 서귀포에서 가 볼 만한 식당과 카페를 모았어요</p>
+  </header>
+
+  <section class="wish" aria-labelledby="wishTitle">
+    <h2 id="wishTitle">⭐ 가보고 싶은 곳</h2>
+    <ul id="wishList"></ul>
+    <button class="more" id="wishMore" type="button" hidden></button>
+  </section>
+
+  <div class="bar">
+    <div class="tabs" id="tabs"></div>
+    <label class="search"><span>🔍</span><input id="q" type="search" placeholder="이름으로 검색" autocomplete="off"></label>
+  </div>
+  <div class="tabs sub" id="regions"></div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+
+  <footer>점수(score)는 개인 관심도 점수이며 실제 평점이 아닙니다. 영업 여부는 방문 전에 확인하세요.</footer>
+</div>
+
+<script type="application/json" id="embedded">{
+  "region": "제주특별자치도",
+  "topic": "제주 카페·맛집",
+  "items": [
+
+    { "name": "우진해장국", "category": "한식", "description": "제주시 음식점(한식)", "score": 90, "selected": false, "source": "" },
+    { "name": "삼대국수회관", "category": "한식", "description": "제주시 음식점(한식)", "score": 88, "selected": false, "source": "" },
+    { "name": "올래국수", "category": "한식", "description": "제주시 음식점(한식)", "score": 85, "selected": false, "source": "" },
+    { "name": "자매국수", "category": "한식", "description": "제주시 음식점(한식)", "score": 84, "selected": false, "source": "" },
+    { "name": "돈사돈", "category": "한식", "description": "제주시 음식점(한식)", "score": 86, "selected": false, "source": "" },
+    { "name": "숙성도", "category": "한식", "description": "제주시 음식점(한식)", "score": 89, "selected": false, "source": "" },
+    { "name": "김만복김밥", "category": "한식", "description": "제주시 음식점(한식)", "score": 72, "selected": false, "source": "" },
+    { "name": "유리네식당", "category": "한식", "description": "제주시 음식점(한식)", "score": 83, "selected": false, "source": "https://www.siksinhot.com/toplists/best/022371_jejudo" },
+    { "name": "갱이네 보말칼국수", "category": "한식", "description": "제주시 음식점(한식)", "score": 78, "selected": false, "source": "https://www.taxwatch.co.kr/article/tax/2024/06/20/0005" },
+    { "name": "문동일셰프의 녹차고을", "category": "한식", "description": "제주시 음식점(한식)", "score": 76, "selected": true, "source": "https://www.taxwatch.co.kr/article/tax/2024/06/20/0005" },
+    { "name": "일도집", "category": "한식", "description": "제주시 음식점(한식)", "score": 70, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "착한집", "category": "한식", "description": "제주시 음식점(한식)", "score": 68, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "물항식당", "category": "한식", "description": "제주시 음식점(한식)", "score": 74, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "진대감 제주점", "category": "한식", "description": "제주시 음식점(한식)", "score": 66, "selected": true, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "순옥이네명가", "category": "한식", "description": "제주시 음식점(한식)", "score": 71, "selected": false, "source": "" },
+    { "name": "칠돈가", "category": "한식", "description": "제주시 음식점(한식)", "score": 82, "selected": false, "source": "" },
+    { "name": "고집돌우럭", "category": "한식", "description": "제주시 음식점(한식)", "score": 79, "selected": false, "source": "" },
+    { "name": "선흘곶", "category": "한식", "description": "제주시 음식점(한식)", "score": 73, "selected": false, "source": "" },
+
+    { "name": "서문수산", "category": "일식", "description": "제주시 음식점(일식)", "score": 80, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "해원앙", "category": "일식", "description": "제주시 음식점(일식)", "score": 69, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "한라회센타", "category": "일식", "description": "제주시 음식점(일식)", "score": 64, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "쉐프의 스시 이야기", "category": "일식", "description": "제주시 음식점(일식)", "score": 77, "selected": false, "source": "https://polle.com/place/4ii8wz/%EC%89%90%ED%94%84%EC%9D%98%20%EC%8A%A4%EC%8B%9C%20%EC%9D%B4%EC%95%BC%EA%B8%B0" },
+
+    { "name": "묘한 식당", "category": "양식", "description": "제주시 음식점(양식)", "score": 81, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "그릉그릉파스타", "category": "양식", "description": "제주시 음식점(양식)", "score": 75, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "센슈어스", "category": "양식", "description": "제주시 음식점(양식)", "score": 73, "selected": false, "source": "https://polle.com/place/5abkx9/센슈어스" },
+    { "name": "찰리스", "category": "양식", "description": "제주시 음식점(양식)", "score": 67, "selected": false, "source": "https://polle.com/place/3TdEJ5/찰리스" },
+    { "name": "이스트포레스트", "category": "양식", "description": "제주시 음식점(양식)", "score": 65, "selected": false, "source": "https://www.ktriptips.com/kor/food/2845370" },
+
+    { "name": "연태만", "category": "중식", "description": "제주시 음식점(중식)", "score": 74, "selected": false, "source": "https://polle.com/place/201GMM/연태만" },
+    { "name": "도두반점", "category": "중식", "description": "제주시 음식점(중식)", "score": 62, "selected": false, "source": "https://polle.com/recre8or/posts/41" },
+
+    { "name": "네거리식당", "category": "한식", "description": "서귀포 음식점(한식)", "score": 87, "selected": false, "source": "https://hotplacehunter.co.kr/?p=88891" },
+    { "name": "산방식당", "category": "한식", "description": "서귀포 음식점(한식)", "score": 82, "selected": true, "source": "https://hotplacehunter.co.kr/?p=88891" },
+    { "name": "공천포식당", "category": "한식", "description": "서귀포 음식점(한식)", "score": 79, "selected": false, "source": "https://hotplacehunter.co.kr/?p=88891" },
+    { "name": "서귀포 백돼지", "category": "한식", "description": "서귀포 음식점(한식)", "score": 70, "selected": false, "source": "https://hotplacehunter.co.kr/?p=88891" },
+    { "name": "시골친구", "category": "한식", "description": "서귀포 음식점(한식)", "score": 72, "selected": false, "source": "https://kr.trip.com/moments/detail/seogwipo-14755-146509204/" },
+    { "name": "송원가든", "category": "한식", "description": "서귀포 음식점(한식)", "score": 68, "selected": false, "source": "https://www.vogue.co.kr/2024/04/26/현지인-추천-숨은-제주-맛집-10/" },
+    { "name": "덤장 중문점", "category": "한식", "description": "서귀포 음식점(한식)", "score": 66, "selected": true, "source": "https://hotplacehunter.co.kr/?p=52097" },
+    { "name": "해장살롱 중문직영점", "category": "한식", "description": "서귀포 음식점(한식)", "score": 63, "selected": false, "source": "https://www.trvlogue.com/ko/jeju-jungmun-haejang-salon" },
+    { "name": "미영이네식당", "category": "한식", "description": "서귀포 음식점(한식)", "score": 75, "selected": false, "source": "" },
+
+    { "name": "형아시횟집", "category": "일식", "description": "서귀포 음식점(일식)", "score": 71, "selected": false, "source": "https://hotplacehunter.co.kr/?p=88891" },
+    { "name": "쌍둥이횟집", "category": "일식", "description": "서귀포 음식점(일식)", "score": 69, "selected": true, "source": "https://hotplacehunter.co.kr/?p=88891" },
+
+    { "name": "페를로", "category": "양식", "description": "서귀포 음식점(양식)", "score": 78, "selected": true, "source": "https://www.ktriptips.com/kor/food/3066880" },
+    { "name": "센트로", "category": "양식", "description": "서귀포 음식점(양식)", "score": 72, "selected": false, "source": "https://polle.com/place/5lJjk0/센트로" },
+
+    { "name": "명경식당", "category": "중식", "description": "서귀포 음식점(중식)", "score": 60, "selected": false, "source": "" },
+
+    { "name": "제주당", "category": "카페", "description": "제주시 카페", "score": 85, "selected": false, "source": "https://www.trvlogue.com/ko/jejudang-cafe-jeju-review" },
+    { "name": "레이지펌프", "category": "카페", "description": "제주시 카페", "score": 80, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "인디고인디드", "category": "카페", "description": "제주시 카페", "score": 76, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "베릴", "category": "카페", "description": "제주시 카페", "score": 74, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "앤디앤라라홈뮤즈", "category": "카페", "description": "제주시 카페", "score": 77, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "모알보알", "category": "카페", "description": "제주시 카페", "score": 82, "selected": true, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "빠빠라기", "category": "카페", "description": "제주시 카페", "score": 70, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "1938 함덕차관", "category": "카페", "description": "제주시 카페", "score": 73, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "다니쉬", "category": "카페", "description": "제주시 카페", "score": 68, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "카페 델문도", "category": "카페", "description": "제주시 카페", "score": 84, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "카페 더 콘테나", "category": "카페", "description": "제주시 카페", "score": 66, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "카페 글렌코", "category": "카페", "description": "제주시 카페", "score": 71, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "카페한라산", "category": "카페", "description": "제주시 카페", "score": 69, "selected": true, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "안녕 협재씨", "category": "카페", "description": "제주시 카페", "score": 64, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "우무", "category": "카페", "description": "제주시 카페", "score": 62, "selected": false, "source": "https://polle.com/posts/tag/%EC%A0%9C%EC%A3%BC%EC%B9%B4%ED%8E%98" },
+    { "name": "몽상드애월", "category": "카페", "description": "제주시 카페", "score": 81, "selected": false, "source": "" },
+    { "name": "봄날", "category": "카페", "description": "제주시 카페", "score": 78, "selected": false, "source": "" },
+    { "name": "새빌", "category": "카페", "description": "제주시 카페", "score": 75, "selected": false, "source": "" },
+    { "name": "에이바우트 커피", "category": "카페", "description": "제주시 카페", "score": 67, "selected": false, "source": "" },
+    { "name": "대림창고", "category": "카페", "description": "제주시 카페", "score": 72, "selected": false, "source": "https://www.teamblind.com/kr/post/분위기좋은-카페-추천좀-해주세요-sks1Zg01" },
+
+    { "name": "프릳츠 제주 성산점", "category": "카페", "description": "서귀포 카페", "score": 83, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "무상찻집", "category": "카페", "description": "서귀포 카페", "score": 79, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "가시림", "category": "카페", "description": "서귀포 카페", "score": 76, "selected": false, "source": "https://www.elle.co.kr/article/1885649" },
+    { "name": "서귀피안 베이커리", "category": "카페", "description": "서귀포 카페", "score": 80, "selected": true, "source": "https://www.trvlogue.com/ko/seogwipian-bakery-jeju" },
+    { "name": "오른", "category": "카페", "description": "서귀포 카페", "score": 74, "selected": false, "source": "https://polle.com/place/5iPGSv/%EC%98%A4%EB%A5%B8" },
+    { "name": "바다바라", "category": "카페", "description": "서귀포 카페", "score": 72, "selected": false, "source": "https://gusle.kr/%EC%84%9C%EA%B7%80%ED%8F%AC-%EC%B9%B4%ED%8E%98-%EC%B6%94%EC%B2%9C-%EC%98%A4%EC%85%98%EB%B7%B0-%EA%B0%90%EC%84%B1-%EB%B7%B0%EB%A7%9B%EC%A7%91-5%EA%B3%B3/" },
+    { "name": "원앤온리", "category": "카페", "description": "서귀포 카페", "score": 70, "selected": false, "source": "https://gusle.kr/%EC%84%9C%EA%B7%80%ED%8F%AC-%EC%B9%B4%ED%8E%98-%EC%B6%94%EC%B2%9C-%EC%98%A4%EC%85%98%EB%B7%B0-%EA%B0%90%EC%84%B1-%EB%B7%B0%EB%A7%9B%EC%A7%91-5%EA%B3%B3/" },
+    { "name": "카페 서연의집", "category": "카페", "description": "서귀포 카페", "score": 68, "selected": false, "source": "" },
+    { "name": "이니스프리 제주하우스", "category": "카페", "description": "서귀포 카페", "score": 65, "selected": true, "source": "" },
+    { "name": "오설록 티뮤지엄", "category": "카페", "description": "서귀포 카페", "score": 78, "selected": false, "source": "" },
+    { "name": "테라로사 서귀포점", "category": "카페", "description": "서귀포 카페", "score": 73, "selected": false, "source": "" },
+    { "name": "더클리프", "category": "카페", "description": "서귀포 카페", "score": 77, "selected": false, "source": "" },
+    { "name": "보롬왓", "category": "카페", "description": "서귀포 카페", "score": 69, "selected": false, "source": "" },
+    { "name": "곰막식당", "category": "한식", "description": "제주시 음식점(한식)", "score": 77, "selected": false, "source": "https://polle.com/place/3ZMjEC/%EA%B3%B0%EB%A7%89%EC%8B%9D%EB%8B%B9" },
+    { "name": "그린 구름", "category": "카페", "description": "제주시 카페", "score": 71, "selected": false, "source": "https://polle.com/place/2SMIuz/%EA%B7%B8%EB%A6%B0%20%EA%B5%AC%EB%A6%84" }
+  ]
+}</script>
+<script>
+  const CATEGORIES = ["전체", "한식", "일식", "양식", "중식", "카페"];
+  const EMOJI = { 한식: "🍚", 일식: "🍣", 양식: "🍝", 중식: "🥟", 카페: "☕" };
+  const TAB_LABEL = { 전체: "🍴 전체", 한식: "🍚 한식", 일식: "🍣 일식", 양식: "🍝 양식", 중식: "🥟 중식", 카페: "☕ 카페" };
+  const $ = (id) => document.getElementById(id);
+  let items = [];
+  let category = "전체";
+  let region = "전체";
+  const REGIONS = ["전체", "제주시", "서귀포"];
+  // description 이 "제주시 ..." / "서귀포 ..." 로 시작하므로 앞 단어가 지역이다
+  const regionOf = (it) => (it.description.startsWith("서귀포") ? "서귀포" : "제주시");
+
+  // category(한식/일식/양식/중식/카페)에 어울리는 이모티콘을 고른다
+  function emojiOf(it) {
+    return EMOJI[it.category] || "🍽️";
+  }
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function makeCard(it) {
+    const c = el("article", "card" + (it.selected ? " sel" : ""));
+    if (it.selected) c.append(el("span", "star", "⭐"));
+    c.append(el("div", "emo", emojiOf(it)), el("h3", "", it.name), el("span", "badge", it.category), el("div", "desc", it.description));
+    const sc = el("div", "score");
+    const meter = el("div", "meter");
+    const bar = el("i");
+    bar.style.width = Math.max(0, Math.min(100, it.score)) + "%";
+    meter.append(bar);
+    sc.append(el("span", "", "🔥 " + it.score), meter);
+    c.append(sc);
+    if (it.source) {
+      const a = el("a", "", "출처 보기 ↗");
+      a.href = it.source; a.target = "_blank"; a.rel = "noopener";
+      c.append(a);
+    }
+    return c;
+  }
+
+  function render() {
+    const word = $("q").value.trim().toLowerCase();
+    const list = items
+      .filter((it) => (category === "전체" || it.category === category)
+        && (region === "전체" || regionOf(it) === region)
+        && it.name.toLowerCase().includes(word))
+      .sort((a, b) => b.score - a.score);               // score 높은 순
+    $("grid").replaceChildren(...(list.length ? list.map(makeCard) : [el("div", "empty", "😢 찾는 곳이 없어요")]));
+    $("count").textContent = `${list.length}곳 · 점수 높은 순`;
+    document.querySelectorAll(".tab").forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.c ? b.dataset.c === category : b.dataset.r === region)));
+  }
+
+  // 가보고 싶은 곳: 처음엔 3개만 보이고, "더 보기"를 누를 때마다 3개씩 늘어난다
+  const WISH_STEP = 3;
+  let wishShown = WISH_STEP;
+
+  function renderWish() {
+    const picks = items.filter((it) => it.selected).sort((a, b) => b.score - a.score);
+    const shown = picks.slice(0, wishShown);
+    $("wishList").replaceChildren(...(picks.length
+      ? shown.map((it) => { const li = el("li", "", emojiOf(it) + " " + it.name); li.append(el("small", "", it.description)); return li; })
+      : [el("li", "none", "아직 고른 곳이 없어요")]));
+    const btn = $("wishMore");
+    btn.hidden = picks.length <= WISH_STEP;
+    btn.textContent = picks.length > wishShown ? `더 보기 ▾ (${shown.length}/${picks.length})` : "접기 ▴";
+  }
+  $("wishMore").addEventListener("click", () => {
+    const total = items.filter((it) => it.selected).length;
+    wishShown = wishShown < total ? wishShown + WISH_STEP : WISH_STEP;
+    renderWish();
+  });
+
+  CATEGORIES.forEach((c) => {
+    const b = el("button", "tab", TAB_LABEL[c]);
+    b.type = "button"; b.dataset.c = c;
+    b.addEventListener("click", () => { category = c; render(); });
+    $("tabs").append(b);
+  });
+  REGIONS.forEach((r) => {
+    const b = el("button", "tab", r === "전체" ? "📍 전체 지역" : "📍 " + r);
+    b.type = "button"; b.dataset.r = r;
+    b.addEventListener("click", () => { region = r; render(); });
+    $("regions").append(b);
+  });
+  $("q").addEventListener("input", render);
+
+  function start(d) { items = d.items; renderWish(); render(); }
+
+  // 웹 서버/Vercel 에서는 jeju_restaurants.json 을 읽고,
+  // 탐색기에서 더블클릭(file://)해 fetch 가 막히면 아래 #embedded 에 들어 있는 복사본을 쓴다
+  fetch("jeju_restaurants.json")
+    .then((r) => r.json())
+    .then(start)
+    .catch(() => start(JSON.parse($("embedded").textContent)));
+</script>
+</body>
+</html>

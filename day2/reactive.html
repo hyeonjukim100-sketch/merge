@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>반응형 메뉴 페이지</title>
+  <style>
+    :root { --bg:#f4f1ea; --card:#ffffff; --fg:#22211e; --muted:#6f6d66; --line:#e2ded3; --accent:#e8751a; --accent-fg:#ffffff; --soft:#fdf0e3; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#151613; --card:#212220; --fg:#eeede7; --muted:#a09e96; --line:#383935; --accent:#f08a3c; --accent-fg:#1a1100; --soft:#33271a; }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+    body { font-family: sans-serif; background: var(--bg); color: var(--fg); margin: 0; line-height: 1.6; }
+
+    /* 상단 바 */
+    .topbar { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 1px solid var(--line); }
+    .bar { max-width: 1100px; margin: 0 auto; padding: 0 16px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+    .logo { font-weight: 700; font-size: 1.15rem; color: var(--accent); text-decoration: none; }
+
+    /* 메뉴 (PC: 가로 / 모바일: 햄버거 드롭다운) */
+    .menu { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
+    .menu a { display: block; padding: 8px 16px; border-radius: 999px; color: var(--fg); text-decoration: none; font-weight: 600; }
+    .menu a:hover, .menu a.active { background: var(--accent); color: var(--accent-fg); }
+
+    .burger { display: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--fg); cursor: pointer; align-items: center; justify-content: center; }
+    .burger:hover { background: var(--soft); }
+    .burger span, .burger span::before, .burger span::after { display: block; width: 22px; height: 2px; background: currentColor; border-radius: 2px; transition: transform .25s, opacity .25s; }
+    .burger span { position: relative; }
+    .burger span::before, .burger span::after { content: ""; position: absolute; left: 0; }
+    .burger span::before { top: -7px; }
+    .burger span::after { top: 7px; }
+    .burger[aria-expanded="true"] span { background: transparent; }
+    .burger[aria-expanded="true"] span::before { transform: translateY(7px) rotate(45deg); }
+    .burger[aria-expanded="true"] span::after { transform: translateY(-7px) rotate(-45deg); }
+
+    @media (max-width: 720px) {
+      .burger { display: flex; }
+      .menu { position: absolute; top: 60px; left: 0; right: 0; flex-direction: column; gap: 0; padding: 8px 12px 12px; background: var(--card); border-bottom: 1px solid var(--line); box-shadow: 0 8px 16px rgba(0,0,0,.12); display: none; }
+      .menu.open { display: flex; }
+      .menu a { border-radius: 10px; padding: 12px 14px; }
+    }
+
+    /* 본문 */
+    main { max-width: 1100px; margin: 0 auto; padding: clamp(12px, 3vw, 24px); display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .hero { grid-column: 1 / -1; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: clamp(18px, 4vw, 32px); }
+    .hero h1 { margin: 0 0 6px; font-size: clamp(1.4rem, 4.5vw, 2rem); }
+    .hero p { margin: 0; color: var(--muted); }
+    section.cat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: clamp(14px, 3vw, 24px); min-width: 0; }
+    section.cat h2 { margin: 0 0 8px; font-size: 1.2rem; }
+    section.cat .emoji { font-size: 2rem; }
+    section.cat p { margin: 0 0 8px; }
+    section.cat ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: .92rem; }
+    .tag { display: inline-block; margin-top: 8px; padding: 2px 10px; border-radius: 999px; background: var(--soft); color: var(--accent); font-size: .78rem; font-weight: 700; }
+    footer { max-width: 1100px; margin: 0 auto; padding: 8px 16px 28px; text-align: center; color: var(--muted); font-size: .88rem; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="bar">
+      <a class="logo" href="#top">🧭 반응형 메뉴</a>
+      <button class="burger" id="burger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"><span></span></button>
+      <ul class="menu" id="menu">
+        <li><a href="#food">🍽️ 음식</a></li>
+        <li><a href="#furniture">🛋️ 가구</a></li>
+        <li><a href="#realestate">🏠 부동산</a></li>
+        <li><a href="#stock">📈 주식</a></li>
+        <li><a href="#map">🗺️ 지도</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <main id="top">
+    <div class="hero">
+      <h1>화면 크기에 맞춰 바뀌는 메뉴</h1>
+      <p>PC에서는 위쪽에 메뉴가 펼쳐지고, 모바일에서는 오른쪽 위 ☰ 아이콘을 누르면 메뉴가 열립니다.</p>
+    </div>
+
+    <section class="cat" id="food">
+      <div class="emoji">🍽️</div>
+      <h2>음식</h2>
+      <p>맛집, 레시피, 제철 음식 이야기를 모아 보는 곳입니다.</p>
+      <ul><li>오늘의 추천 메뉴</li><li>지역별 맛집</li><li>집에서 만드는 레시피</li></ul>
+      <span class="tag">샘플 내용</span>
+    </section>
+
+    <section class="cat" id="furniture">
+      <div class="emoji">🛋️</div>
+      <h2>가구</h2>
+      <p>방 분위기를 바꿔 주는 가구와 인테리어 정보를 소개합니다.</p>
+      <ul><li>거실·침실 가구</li><li>작은 공간 활용법</li><li>인테리어 아이디어</li></ul>
+      <span class="tag">샘플 내용</span>
+    </section>
+
+    <section class="cat" id="realestate">
+      <div class="emoji">🏠</div>
+      <h2>부동산</h2>
+      <p>집을 구하고 비교할 때 확인할 점을 정리하는 곳입니다.</p>
+      <ul><li>매매 · 전세 · 월세 용어</li><li>계약 전 체크리스트</li><li>동네 정보 보기</li></ul>
+      <span class="tag">샘플 내용</span>
+    </section>
+
+    <section class="cat" id="stock">
+      <div class="emoji">📈</div>
+      <h2>주식</h2>
+      <p>시장 소식과 투자 공부 자료를 모아 두는 곳입니다.</p>
+      <ul><li>기초 용어 설명</li><li>관심 종목 메모</li><li>시장 뉴스 모아보기</li></ul>
+      <span class="tag">샘플 내용 · 투자 조언 아님</span>
+    </section>
+
+    <section class="cat" id="map">
+      <div class="emoji">🗺️</div>
+      <h2>지도</h2>
+      <p>위치 검색과 길찾기, 주변 장소 보기를 연결하는 곳입니다.</p>
+      <ul><li>장소 검색</li><li>길찾기</li><li>내 주변 보기</li></ul>
+      <span class="tag">샘플 내용</span>
+    </section>
+  </main>
+
+  <footer><a href="index.html" style="color:var(--accent)">← 제주 특산물 사이트로 돌아가기</a><br>© 2026 김현주 · reactive.html</footer>
+
+  <script>
+    const burger = document.getElementById('burger');
+    const menu = document.getElementById('menu');
+
+    function setOpen(open) {
+      menu.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+      burger.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+    }
+
+    burger.addEventListener('click', () => setOpen(!menu.classList.contains('open')));
+    // 메뉴를 고르면 닫기
+    menu.addEventListener('click', e => { if (e.target.closest('a')) setOpen(false); });
+    // ESC 키 또는 화면 밖을 누르면 닫기
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+    document.addEventListener('click', e => { if (!e.target.closest('.bar')) setOpen(false); });
+    // PC 폭으로 돌아가면 닫힌 상태로 초기화
+    window.matchMedia('(min-width: 721px)').addEventListener('change', e => { if (e.matches) setOpen(false); });
+
+    // 지금 보고 있는 구역에 맞춰 메뉴 강조
+    const links = [...menu.querySelectorAll('a')];
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    document.querySelectorAll('section.cat').forEach(s => io.observe(s));
+  </script>
+</body>
+</html>
